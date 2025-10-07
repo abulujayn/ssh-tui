@@ -42,6 +42,11 @@ func ParseKnownHosts() ([]SSHHost, error) {
 			continue
 		}
 
+		// Skip special SSH entries (certificate authority, revoked keys, etc.)
+		if strings.HasPrefix(line, "@cert-authority") || strings.HasPrefix(line, "@revoked") {
+			continue
+		}
+
 		// Parse known_hosts line format: host[,host2,...] key-type key [comment]
 		parts := strings.Fields(line)
 		if len(parts) < 3 {
