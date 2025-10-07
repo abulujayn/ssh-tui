@@ -2,7 +2,6 @@ package parser
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 )
 
@@ -22,32 +21,28 @@ func DiscoverHosts() ([]SSHHost, error) {
 		return nil, fmt.Errorf("failed to parse known_hosts: %w", err)
 	}
 
-	// Merge hosts with deduplication
-	hostMap := make(map[string]SSHHost)
+	// Merge hosts with deduplication while preserving config order
+	hostMap := make(map[string]bool) // Track which hosts we've already seen
 
-	// Add config hosts first (they have priority)
+	// Add config hosts first (preserving their original order)
 	for _, host := range configHosts {
 		key := strings.ToLower(host.Name)
-		hostMap[key] = host
+		if !hostMap[key] {
+			allHosts = append(allHosts, host)
+			hostMap[key] = true
+		}
 	}
 
 	// Add known_hosts entries that aren't already in config
 	for _, host := range knownHosts {
 		key := strings.ToLower(host.Name)
-		if _, exists := hostMap[key]; !exists {
-			hostMap[key] = host
+		if !hostMap[key] {
+			allHosts = append(allHosts, host)
+			hostMap[key] = true
 		}
 	}
 
-	// Convert map back to slice
-	for _, host := range hostMap {
-		allHosts = append(allHosts, host)
-	}
-
-	// Sort hosts alphabetically by name
-	sort.Slice(allHosts, func(i, j int) bool {
-		return strings.ToLower(allHosts[i].Name) < strings.ToLower(allHosts[j].Name)
-	})
+	// No sorting needed - hosts are already in config order, with known_hosts appended
 
 	return allHosts, nil
 }
@@ -76,10 +71,10 @@ func FilterHosts(hosts []SSHHost, searchTerm string) []SSHHost {
 func FormatHostDisplay(host SSHHost) string {
 	var lines []string
 
-	// Main host line with just the name
+	// Main host line - just the name (aliases are handled in TUI styling)
 	lines = append(lines, host.Name)
 
-	// Build details line with hostname, user, port, and source
+	// Build details line with hostname, user, port
 	var details []string
 
 	// Add hostname if different from name
@@ -92,13 +87,6 @@ func FormatHostDisplay(host SSHHost) string {
 	}
 	if host.Port != "" && host.Port != "22" {
 		details = append(details, fmt.Sprintf("port: %s", host.Port))
-	}
-
-	// Add source indicator
-	if host.Source == "config" {
-		details = append(details, "[config]")
-	} else {
-		details = append(details, "[known_hosts]")
 	}
 
 	if len(details) > 0 {

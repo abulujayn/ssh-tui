@@ -13,7 +13,8 @@ type SSHHost struct {
 	HostName string
 	User     string
 	Port     string
-	Source   string // "config" or "known_hosts"
+	Source   string   // "config" or "known_hosts"
+	Aliases  []string // Alternative names for this host
 }
 
 // ParseSSHConfig parses the SSH config file and returns a list of hosts
@@ -68,15 +69,31 @@ func ParseSSHConfig() ([]SSHHost, error) {
 				hosts = append(hosts, currentHost)
 			}
 
-			// Start new host section
-			currentHost = SSHHost{Name: value}
-			inHostSection = true
-
-			// Skip wildcard entries
-			if strings.Contains(value, "*") || strings.Contains(value, "?") {
+			// Parse multiple hostnames (space-delimited)
+			hostNames := strings.Fields(value)
+			if len(hostNames) == 0 {
 				inHostSection = false
 				continue
 			}
+
+			// Use the first hostname as the primary name
+			primaryHostName := hostNames[0]
+
+			// Skip wildcard entries
+			if strings.Contains(primaryHostName, "*") || strings.Contains(primaryHostName, "?") {
+				inHostSection = false
+				continue
+			}
+
+			// Collect aliases (all hostnames except the first one)
+			var aliases []string
+			if len(hostNames) > 1 {
+				aliases = hostNames[1:]
+			}
+
+			// Start new host section with the primary hostname and aliases
+			currentHost = SSHHost{Name: primaryHostName, Aliases: aliases}
+			inHostSection = true
 
 		case "hostname":
 			if inHostSection {

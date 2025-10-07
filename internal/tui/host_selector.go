@@ -194,8 +194,9 @@ func (m *HostSelectorModel) View() string {
 				Background(lipgloss.Color("86")).
 				Bold(true)
 
-			// Apply selected style to first line with cursor
-			b.WriteString("▶ " + selectedStyle.Render(lines[0]) + "\n")
+			// Apply selected style to first line with cursor (with styled aliases)
+			styledHostLine := m.formatHostLineWithAliasesSelected(host, selectedStyle)
+			b.WriteString("▶ " + styledHostLine + "\n")
 
 			// Apply selected style to additional lines with proper indentation
 			for j := 1; j < len(lines); j++ {
@@ -209,8 +210,9 @@ func (m *HostSelectorModel) View() string {
 			detailStyle := lipgloss.NewStyle().
 				Foreground(lipgloss.Color("241"))
 
-			// Render first line (host name)
-			b.WriteString("  " + normalStyle.Render(lines[0]) + "\n")
+			// Render first line (host name) with styled aliases
+			styledHostLine := m.formatHostLineWithAliases(host, normalStyle, detailStyle)
+			b.WriteString("  " + styledHostLine + "\n")
 
 			// Render additional lines (details) with dimmed style
 			for j := 1; j < len(lines); j++ {
@@ -278,4 +280,30 @@ func (m *HostSelectorModel) GetSelectedHost() *parser.SSHHost {
 // IsSelected returns whether a host was selected
 func (m *HostSelectorModel) IsSelected() bool {
 	return m.selected
+}
+
+// formatHostLineWithAliases formats the host name line with styled aliases
+func (m *HostSelectorModel) formatHostLineWithAliases(host parser.SSHHost, normalStyle, aliasStyle lipgloss.Style) string {
+	hostName := normalStyle.Render(host.Name)
+
+	if len(host.Aliases) > 0 {
+		aliasesStr := " [" + strings.Join(host.Aliases, ", ") + "]"
+		hostName += aliasStyle.Render(aliasesStr)
+	}
+
+	return hostName
+}
+
+// formatHostLineWithAliasesSelected formats the host name line for selected state
+func (m *HostSelectorModel) formatHostLineWithAliasesSelected(host parser.SSHHost, selectedStyle lipgloss.Style) string {
+	if len(host.Aliases) > 0 {
+		// For selected items, render everything with the selected style but make aliases slightly dimmed
+		aliasStyle := selectedStyle.Copy().Foreground(lipgloss.Color("245"))
+		hostName := selectedStyle.Render(host.Name)
+		aliasesStr := " [" + strings.Join(host.Aliases, ", ") + "]"
+		hostName += aliasStyle.Render(aliasesStr)
+		return hostName
+	}
+
+	return selectedStyle.Render(host.Name)
 }
