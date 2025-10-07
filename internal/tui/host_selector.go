@@ -47,13 +47,13 @@ func (m *HostSelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c", "q":
+		case "ctrl+c":
 			return m, tea.Quit
 
 		case "/":
-			// Toggle search mode
-			m.searchActive = !m.searchActive
-			if m.searchActive {
+			if !m.searchActive {
+				// Toggle search mode
+				m.searchActive = true
 				m.cursor = 0
 			}
 
@@ -69,7 +69,26 @@ func (m *HostSelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "enter":
-			if len(m.filteredHosts) > 0 && m.cursor < len(m.filteredHosts) {
+			if m.searchActive {
+				// If no hosts found, treat search input as custom host if valid
+				if m.searchInput != "" && len(m.filteredHosts) == 0 {
+					if parser.IsValidHost(m.searchInput) {
+						// Parse user and host from input
+						user, host := parser.ParseUserHost(m.searchInput)
+						customHost := parser.SSHHost{
+							Name:     m.searchInput,
+							HostName: host,
+							User:     user,
+							Port:     "22",
+							Source:   "custom",
+							Aliases:  nil,
+						}
+						m.selectedHost = &customHost
+						m.selected = true
+						return m, tea.Quit
+					}
+				}
+			} else if len(m.filteredHosts) > 0 && m.cursor < len(m.filteredHosts) {
 				m.selectedHost = &m.filteredHosts[m.cursor]
 				m.selected = true
 				return m, tea.Quit
@@ -89,6 +108,15 @@ func (m *HostSelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.searchActive && len(m.searchInput) > 0 {
 				m.searchInput = m.searchInput[:len(m.searchInput)-1]
 				m.updateFilter()
+			}
+
+		case "q":
+			if m.searchActive {
+				// treat as input
+				m.searchInput += "q"
+				m.updateFilter()
+			} else {
+				return m, tea.Quit
 			}
 
 		default:
@@ -130,14 +158,22 @@ func (m *HostSelectorModel) View() string {
 
 	// Host list
 	if len(m.filteredHosts) == 0 {
-		noHostsStyle := lipgloss.NewStyle().
-			Foreground(lipgloss.Color("203")).
+		// Styles
+		errorStyle := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("203")). // red
+			Bold(true)
+		titleStyle := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("183")). // purple (same as title)
 			Bold(true)
 
 		if m.searchInput != "" {
-			b.WriteString(noHostsStyle.Render("No hosts found matching: " + m.searchInput))
+			if parser.IsValidHost(m.searchInput) {
+				b.WriteString(titleStyle.Render("Press Enter to use as custom host: " + m.searchInput))
+			} else {
+				b.WriteString(errorStyle.Render("No hosts found matching: " + m.searchInput))
+			}
 		} else {
-			b.WriteString(noHostsStyle.Render("No SSH hosts found.\nCheck that ~/.ssh/config or ~/.ssh/known_hosts exist and contain host entries."))
+			b.WriteString(errorStyle.Render("No SSH hosts found.\nCheck that ~/.ssh/config or ~/.ssh/known_hosts exist and contain host entries."))
 		}
 
 		// Instructions at the bottom even when no hosts found
