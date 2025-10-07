@@ -24,7 +24,7 @@ func TestBuildSSHCommand_ConfigHost(t *testing.T) {
 
 	// Test with additional options
 	command = buildSSHCommand(configHost, "-L 8080:localhost:80")
-	expected = "ssh -L 8080:localhost:80 myserver"
+	expected = "ssh myserver -L 8080:localhost:80"
 	if command != expected {
 		t.Errorf("Expected '%s', got '%s'", expected, command)
 	}
@@ -49,7 +49,7 @@ func TestBuildSSHCommand_KnownHost(t *testing.T) {
 
 	// Test with additional options
 	command = buildSSHCommand(knownHost, "-i ~/.ssh/key")
-	expected = "ssh -i ~/.ssh/key -p 2222 admin@server.example.com"
+	expected = "ssh -p 2222 admin@server.example.com -i ~/.ssh/key"
 	if command != expected {
 		t.Errorf("Expected '%s', got '%s'", expected, command)
 	}

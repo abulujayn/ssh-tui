@@ -313,15 +313,13 @@ func buildSSHCommand(host *parser.SSHHost, options string) string {
 
 	parts = append(parts, "ssh")
 
-	// Add user-provided options first
-	if options != "" {
-		parts = append(parts, options)
-	}
-
 	// If the host is from SSH config, just use the host name directly
 	// SSH will handle the configuration expansion automatically
 	if host.Source == "config" {
 		parts = append(parts, host.Name)
+		if options != "" {
+			parts = append(parts, options)
+		}
 		return strings.Join(parts, " ")
 	}
 
@@ -345,6 +343,11 @@ func buildSSHCommand(host *parser.SSHHost, options string) string {
 	}
 
 	parts = append(parts, target)
+
+	// Add user-provided options after the host/target
+	if options != "" {
+		parts = append(parts, options)
+	}
 
 	return strings.Join(parts, " ")
 }
