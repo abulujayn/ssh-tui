@@ -318,6 +318,14 @@ func buildSSHCommand(host *parser.SSHHost, options string) string {
 		parts = append(parts, options)
 	}
 
+	// If the host is from SSH config, just use the host name directly
+	// SSH will handle the configuration expansion automatically
+	if host.Source == "config" {
+		parts = append(parts, host.Name)
+		return strings.Join(parts, " ")
+	}
+
+	// For hosts from known_hosts or other sources, expand the configuration
 	// Add host-specific options from SSH config
 	if host.Port != "" && host.Port != "22" {
 		parts = append(parts, "-p", host.Port)
