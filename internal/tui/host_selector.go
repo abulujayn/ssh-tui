@@ -155,8 +155,9 @@ func (m *HostSelectorModel) View() string {
 		return b.String()
 	}
 
-	// Calculate visible range for scrolling - account for multi-line hosts (2 lines each + spacing)
-	linesPerHost := 3                           // 2 lines for host + 1 line spacing
+	// Calculate visible range for scrolling - account for single-line hosts (1 line each + spacing)
+	// Only focused host shows details, others show just the name
+	linesPerHost := 2                           // 1 line for host + 1 line spacing
 	maxVisible := (m.height - 8) / linesPerHost // Account for header, search, and bottom instructions
 	if maxVisible < 3 {
 		maxVisible = 3
@@ -188,36 +189,54 @@ func (m *HostSelectorModel) View() string {
 		lines := strings.Split(hostDisplay, "\n")
 
 		if i == m.cursor {
-			// Selected style
-			selectedStyle := lipgloss.NewStyle().
-				Foreground(lipgloss.Color("0")).
-				Background(lipgloss.Color("86")).
+			// Selected style - show all details with enhanced visual styling
+			selectedContainerStyle := lipgloss.NewStyle().
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("86")).
+				Foreground(lipgloss.Color("252")).
+				Padding(0, 1, 0, 2).
+				Margin(0, 2, 0, 0).
 				Bold(true)
 
-			// Apply selected style to first line with cursor (with styled aliases)
-			styledHostLine := m.formatHostLineWithAliasesSelected(host, selectedStyle)
-			b.WriteString("▶ " + styledHostLine + "\n")
+			selectedTextStyle := lipgloss.NewStyle().
+				Foreground(lipgloss.Color("86")).
+				Bold(true)
 
-			// Apply selected style to additional lines with proper indentation
+			// Detail text style for host information
+			detailTextStyle := lipgloss.NewStyle().
+				Foreground(lipgloss.Color("245"))
+
+			// Create content for the styled container
+			var content strings.Builder
+
+			// Apply selected style to first line with cursor (with styled aliases)
+			styledHostLine := m.formatHostLineWithAliasesSelectedEnhanced(host, selectedTextStyle)
+			content.WriteString(styledHostLine)
+
+			// Apply detail style to additional lines with subtle styling
 			for j := 1; j < len(lines); j++ {
-				b.WriteString("  " + selectedStyle.Render(lines[j]) + "\n")
+				content.WriteString("\n" + detailTextStyle.Render(lines[j]))
 			}
+
+			// Render the entire selection in a styled container
+			b.WriteString(selectedContainerStyle.Render(content.String()) + "\n")
 		} else {
-			// Normal style
+			// Normal style - only show host name, no details
 			normalStyle := lipgloss.NewStyle().
 				Foreground(lipgloss.Color("252"))
 
 			detailStyle := lipgloss.NewStyle().
 				Foreground(lipgloss.Color("241"))
 
-			// Render first line (host name) with styled aliases
-			styledHostLine := m.formatHostLineWithAliases(host, normalStyle, detailStyle)
-			b.WriteString("  " + styledHostLine + "\n")
+			// Add subtle padding for better alignment with focused entries
+			normalContainerStyle := lipgloss.NewStyle().
+				Padding(0, 0, 0, 3)
 
-			// Render additional lines (details) with dimmed style
-			for j := 1; j < len(lines); j++ {
-				b.WriteString("  " + detailStyle.Render(lines[j]) + "\n")
-			}
+			// Render only the first line (host name) with styled aliases
+			styledHostLine := m.formatHostLineWithAliases(host, normalStyle, detailStyle)
+			b.WriteString(normalContainerStyle.Render(styledHostLine) + "\n")
+
+			// Skip rendering additional lines (details) for non-focused hosts
 		}
 
 		// Add spacing between hosts (except for the last one)
@@ -294,11 +313,13 @@ func (m *HostSelectorModel) formatHostLineWithAliases(host parser.SSHHost, norma
 	return hostName
 }
 
-// formatHostLineWithAliasesSelected formats the host name line for selected state
-func (m *HostSelectorModel) formatHostLineWithAliasesSelected(host parser.SSHHost, selectedStyle lipgloss.Style) string {
+// formatHostLineWithAliasesSelectedEnhanced formats the host name line for enhanced selected state
+func (m *HostSelectorModel) formatHostLineWithAliasesSelectedEnhanced(host parser.SSHHost, selectedStyle lipgloss.Style) string {
 	if len(host.Aliases) > 0 {
-		// For selected items, render everything with the selected style but make aliases slightly dimmed
-		aliasStyle := selectedStyle.Copy().Foreground(lipgloss.Color("245"))
+		// For enhanced selected items, use accent color for aliases
+		aliasStyle := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("183"))
+
 		hostName := selectedStyle.Render(host.Name)
 		aliasesStr := " [" + strings.Join(host.Aliases, ", ") + "]"
 		hostName += aliasStyle.Render(aliasesStr)
