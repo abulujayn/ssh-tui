@@ -155,10 +155,11 @@ func (m *HostSelectorModel) View() string {
 		return b.String()
 	}
 
-	// Calculate visible range for scrolling
-	maxVisible := m.height - 8 // Account for header, search, and bottom instructions
-	if maxVisible < 5 {
-		maxVisible = 5
+	// Calculate visible range for scrolling - account for multi-line hosts (2 lines each + spacing)
+	linesPerHost := 3                           // 2 lines for host + 1 line spacing
+	maxVisible := (m.height - 8) / linesPerHost // Account for header, search, and bottom instructions
+	if maxVisible < 3 {
+		maxVisible = 3
 	}
 
 	start := 0
@@ -183,6 +184,9 @@ func (m *HostSelectorModel) View() string {
 		host := m.filteredHosts[i]
 		hostDisplay := parser.FormatHostDisplay(host)
 
+		// Split the host display into lines for proper styling
+		lines := strings.Split(hostDisplay, "\n")
+
 		if i == m.cursor {
 			// Selected style
 			selectedStyle := lipgloss.NewStyle().
@@ -190,13 +194,33 @@ func (m *HostSelectorModel) View() string {
 				Background(lipgloss.Color("86")).
 				Bold(true)
 
-			b.WriteString("▶ " + selectedStyle.Render(hostDisplay) + "\n")
+			// Apply selected style to first line with cursor
+			b.WriteString("▶ " + selectedStyle.Render(lines[0]) + "\n")
+
+			// Apply selected style to additional lines with proper indentation
+			for j := 1; j < len(lines); j++ {
+				b.WriteString("  " + selectedStyle.Render(lines[j]) + "\n")
+			}
 		} else {
 			// Normal style
 			normalStyle := lipgloss.NewStyle().
 				Foreground(lipgloss.Color("252"))
 
-			b.WriteString("  " + normalStyle.Render(hostDisplay) + "\n")
+			detailStyle := lipgloss.NewStyle().
+				Foreground(lipgloss.Color("241"))
+
+			// Render first line (host name)
+			b.WriteString("  " + normalStyle.Render(lines[0]) + "\n")
+
+			// Render additional lines (details) with dimmed style
+			for j := 1; j < len(lines); j++ {
+				b.WriteString("  " + detailStyle.Render(lines[j]) + "\n")
+			}
+		}
+
+		// Add spacing between hosts (except for the last one)
+		if i < end-1 {
+			b.WriteString("\n")
 		}
 	}
 

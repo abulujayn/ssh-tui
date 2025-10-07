@@ -74,32 +74,36 @@ func FilterHosts(hosts []SSHHost, searchTerm string) []SSHHost {
 
 // FormatHostDisplay formats a host for display in the TUI
 func FormatHostDisplay(host SSHHost) string {
-	var parts []string
+	var lines []string
 
-	// Add the host name
-	parts = append(parts, host.Name)
+	// Main host line with just the name
+	lines = append(lines, host.Name)
+
+	// Build details line with hostname, user, port, and source
+	var details []string
 
 	// Add hostname if different from name
 	if host.HostName != "" && host.HostName != host.Name {
-		parts = append(parts, fmt.Sprintf("(%s)", host.HostName))
+		details = append(details, fmt.Sprintf("host: %s", host.HostName))
 	}
 
-	// Add user if specified
 	if host.User != "" {
-		parts = append(parts, fmt.Sprintf("user: %s", host.User))
+		details = append(details, fmt.Sprintf("user: %s", host.User))
 	}
-
-	// Add port if specified and not default
 	if host.Port != "" && host.Port != "22" {
-		parts = append(parts, fmt.Sprintf("port: %s", host.Port))
+		details = append(details, fmt.Sprintf("port: %s", host.Port))
 	}
 
 	// Add source indicator
 	if host.Source == "config" {
-		parts = append(parts, "[config]")
+		details = append(details, "[config]")
 	} else {
-		parts = append(parts, "[known_hosts]")
+		details = append(details, "[known_hosts]")
 	}
 
-	return strings.Join(parts, " ")
+	if len(details) > 0 {
+		lines = append(lines, "  "+strings.Join(details, " • "))
+	}
+
+	return strings.Join(lines, "\n")
 }
