@@ -108,9 +108,9 @@ func (m *HostSelectorModel) View() string {
 
 	// Title
 	title := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("205")).
+		Foreground(lipgloss.Color("183")).
 		Bold(true).
-		Render("SSH Host Selector")
+		Render("Host selection")
 
 	b.WriteString(title + "\n\n")
 
@@ -119,12 +119,12 @@ func (m *HostSelectorModel) View() string {
 		Foreground(lipgloss.Color("86"))
 
 	if m.searchActive {
-		b.WriteString(searchStyle.Render("🔍 Search: "+m.searchInput+"_") + "\n\n")
+		b.WriteString(searchStyle.Render("Search: "+m.searchInput+"_") + "\n\n")
 	} else {
 		if m.searchInput != "" {
-			b.WriteString(searchStyle.Render("🔍 Search: "+m.searchInput+" (press / to edit)") + "\n\n")
+			b.WriteString(searchStyle.Render("Search: "+m.searchInput+" (press / to edit)") + "\n\n")
 		} else {
-			b.WriteString(searchStyle.Render("🔍 Press / to search") + "\n\n")
+			b.WriteString(searchStyle.Render("Press / to search") + "\n\n")
 		}
 	}
 

@@ -123,7 +123,7 @@ func (m *OptionsEntryModel) View() string {
 
 	// Title
 	title := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("205")).
+		Foreground(lipgloss.Color("183")).
 		Bold(true).
 		Render("SSH Options & Arguments")
 
