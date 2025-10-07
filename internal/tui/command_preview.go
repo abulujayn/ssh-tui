@@ -74,21 +74,8 @@ func (m *CommandPreviewModel) View() string {
 
 	b.WriteString(title + "\n\n")
 
-	// Host information
-	hostStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("86")).
-		Bold(true)
-
-	b.WriteString("Host: " + hostStyle.Render(parser.FormatHostDisplay(*m.host)) + "\n")
-
-	if m.options != "" {
-		optionsStyle := lipgloss.NewStyle().
-			Foreground(lipgloss.Color("183"))
-
-		b.WriteString("Options: " + optionsStyle.Render(m.options) + "\n")
-	}
-
-	b.WriteString("\n")
+	// Host information in compact table format
+	b.WriteString(m.renderCompactHostInfo() + "\n")
 
 	// Command preview
 	b.WriteString("The following SSH command will be executed:\n\n")
@@ -176,4 +163,54 @@ func (m *CommandPreviewModel) IsConfirmed() bool {
 // IsCancelled returns whether the user cancelled the command
 func (m *CommandPreviewModel) IsCancelled() bool {
 	return m.cancelled
+}
+
+// renderCompactHostInfo renders a compact host information section
+func (m *CommandPreviewModel) renderCompactHostInfo() string {
+	infoStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("240")).
+		Padding(0, 2).
+		MarginBottom(1)
+
+	labelStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("86")).
+		Bold(true)
+
+	valueStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("255"))
+
+	var content strings.Builder
+
+	// Host info as inline key-value pairs
+	content.WriteString(labelStyle.Render("Host: "))
+	content.WriteString(valueStyle.Render(m.host.Name))
+
+	if m.host.HostName != "" && m.host.HostName != m.host.Name {
+		content.WriteString("  ")
+		content.WriteString(labelStyle.Render("Hostname: "))
+		content.WriteString(valueStyle.Render(m.host.HostName))
+	}
+
+	if m.host.User != "" {
+		content.WriteString("  ")
+		content.WriteString(labelStyle.Render("User: "))
+		content.WriteString(valueStyle.Render(m.host.User))
+	}
+
+	if m.host.Port != "" && m.host.Port != "22" {
+		content.WriteString("  ")
+		content.WriteString(labelStyle.Render("Port: "))
+		content.WriteString(valueStyle.Render(m.host.Port))
+	}
+
+	if m.options != "" {
+		content.WriteString("\n")
+		content.WriteString(labelStyle.Render("Options: "))
+		optionsStyle := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("183"))
+		content.WriteString(optionsStyle.Render(m.options))
+	}
+
+	return infoStyle.Render(content.String())
 }

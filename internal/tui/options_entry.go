@@ -129,12 +129,8 @@ func (m *OptionsEntryModel) View() string {
 
 	b.WriteString(title + "\n\n")
 
-	// Selected host info
-	hostStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("86")).
-		Bold(true)
-
-	b.WriteString("Selected host: " + hostStyle.Render(parser.FormatHostDisplay(*m.host)) + "\n\n")
+	// Selected host info in table format
+	b.WriteString(m.renderHostInfoTable() + "\n\n")
 
 	// Description
 	descriptionStyle := lipgloss.NewStyle().
@@ -216,6 +212,60 @@ func (m *OptionsEntryModel) IsConfirmed() bool {
 // IsCancelled returns whether the user cancelled the options entry
 func (m *OptionsEntryModel) IsCancelled() bool {
 	return m.cancelled
+}
+
+// renderHostInfoTable renders the selected host information in a table format
+func (m *OptionsEntryModel) renderHostInfoTable() string {
+	// Table styles
+	tableStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("240")).
+		Padding(0, 2)
+
+	headerStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("183")).
+		Bold(true)
+
+	labelStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("86")).
+		Bold(true).
+		Width(12).
+		Align(lipgloss.Left)
+
+	valueStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("255"))
+
+	var tableContent strings.Builder
+
+	// Table header
+	tableContent.WriteString(headerStyle.Render("Current Configuration"))
+	tableContent.WriteString("\n\n")
+
+	// Host name
+	tableContent.WriteString(labelStyle.Render("Host:"))
+	tableContent.WriteString("  ")
+	tableContent.WriteString(valueStyle.Render(m.host.HostName))
+	tableContent.WriteString("\n")
+
+	// Port (always show)
+	port := m.host.Port
+	if port == "" {
+		port = "22" // Default SSH port
+	}
+	tableContent.WriteString(labelStyle.Render("Port:"))
+	tableContent.WriteString("  ")
+	tableContent.WriteString(valueStyle.Render(port))
+	tableContent.WriteString("\n")
+
+	// User
+	if m.host.User != "" {
+		tableContent.WriteString(labelStyle.Render("User:"))
+		tableContent.WriteString("  ")
+		tableContent.WriteString(valueStyle.Render(m.host.User))
+		tableContent.WriteString("\n")
+	}
+
+	return tableStyle.Render(tableContent.String())
 }
 
 // max returns the maximum of two integers
