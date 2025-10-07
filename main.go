@@ -116,9 +116,6 @@ func runTUIFlow(hosts []parser.SSHHost) error {
 		return fmt.Errorf("invalid SSH command: %w", err)
 	}
 
-	// Show a message before executing
-	fmt.Printf("Connecting to %s...\n\n", selectedHost.Name)
-
 	// Execute the SSH command
 	if err := ssh.ExecuteSSHCommand(command); err != nil {
 		return fmt.Errorf("SSH execution failed: %w", err)
@@ -160,9 +157,6 @@ func runOptionsFlow(selectedHost *parser.SSHHost, hosts []parser.SSHHost) error 
 	if err := ssh.ValidateSSHCommand(command); err != nil {
 		return fmt.Errorf("invalid SSH command: %w", err)
 	}
-
-	// Show a message before executing
-	fmt.Printf("Connecting to %s...\n\n", selectedHost.Name)
 
 	// Execute the SSH command
 	if err := ssh.ExecuteSSHCommand(command); err != nil {
