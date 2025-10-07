@@ -108,34 +108,8 @@ func runTUIFlow(hosts []parser.SSHHost) error {
 		return nil
 	}
 
-	options := optionsModel.GetOptions()
-
-	// Step 3: Command Preview
-	commandPreview := tui.NewCommandPreviewModel(selectedHost, options)
-
-	p = tea.NewProgram(commandPreview, tea.WithAltScreen())
-	finalModel, err = p.Run()
-	if err != nil {
-		return fmt.Errorf("failed to run command preview: %w", err)
-	}
-
-	previewModel, ok := finalModel.(*tui.CommandPreviewModel)
-	if !ok {
-		return fmt.Errorf("unexpected model type from command preview")
-	}
-
-	if previewModel.IsCancelled() {
-		// User went back, restart from options entry
-		return runOptionsFlow(selectedHost, hosts)
-	}
-
-	if !previewModel.IsConfirmed() {
-		// User cancelled
-		return nil
-	}
-
-	// Step 4: Execute SSH Command
-	command := previewModel.GetCommand()
+	// Step 3: Execute SSH Command directly
+	command := optionsModel.GetCommand()
 
 	// Validate the command before execution
 	if err := ssh.ValidateSSHCommand(command); err != nil {
@@ -179,34 +153,8 @@ func runOptionsFlow(selectedHost *parser.SSHHost, hosts []parser.SSHHost) error 
 		return nil
 	}
 
-	options := optionsModel.GetOptions()
-
-	// Step 3: Command Preview
-	commandPreview := tui.NewCommandPreviewModel(selectedHost, options)
-
-	p = tea.NewProgram(commandPreview, tea.WithAltScreen())
-	finalModel, err = p.Run()
-	if err != nil {
-		return fmt.Errorf("failed to run command preview: %w", err)
-	}
-
-	previewModel, ok := finalModel.(*tui.CommandPreviewModel)
-	if !ok {
-		return fmt.Errorf("unexpected model type from command preview")
-	}
-
-	if previewModel.IsCancelled() {
-		// User went back, restart options entry
-		return runOptionsFlow(selectedHost, hosts)
-	}
-
-	if !previewModel.IsConfirmed() {
-		// User cancelled
-		return nil
-	}
-
-	// Step 4: Execute SSH Command
-	command := previewModel.GetCommand()
+	// Step 3: Execute SSH Command directly
+	command := optionsModel.GetCommand()
 
 	// Validate the command before execution
 	if err := ssh.ValidateSSHCommand(command); err != nil {

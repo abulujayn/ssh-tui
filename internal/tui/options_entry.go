@@ -174,12 +174,38 @@ func (m *OptionsEntryModel) View() string {
 
 	b.WriteString("\n\n")
 
+	// Command Preview Section
+	commandPreviewTitle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("183")).
+		Bold(true).
+		Render("Command Preview:")
+
+	b.WriteString(commandPreviewTitle + "\n")
+
+	// Show the current command that would be executed
+	currentCommand := m.GetCommand()
+	commandStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("86")).
+		Padding(0, 1).
+		Background(lipgloss.Color("236")).
+		Foreground(lipgloss.Color("252")).
+		Bold(true).
+		Width(max(60, m.width-10))
+
+	b.WriteString(commandStyle.Render(currentCommand) + "\n\n")
+
 	// Main instructions at the bottom
 	instructionStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("241")).
 		Italic(true)
 
-	b.WriteString(instructionStyle.Render("Press Enter to continue, Esc to go back, Ctrl+C to quit") + "\n\n")
+	executeStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("46")).
+		Bold(true)
+
+	b.WriteString(executeStyle.Render("Press Enter to execute") + " • " +
+		instructionStyle.Render("Esc to go back • Ctrl+C to quit") + "\n\n")
 
 	// Keyboard shortcuts help
 	shortcuts := []string{
@@ -274,4 +300,43 @@ func max(a, b int) int {
 		return a
 	}
 	return b
+}
+
+// GetCommand returns the SSH command that would be executed with current options
+func (m *OptionsEntryModel) GetCommand() string {
+	return buildSSHCommand(m.host, m.options)
+}
+
+// buildSSHCommand constructs the SSH command string
+func buildSSHCommand(host *parser.SSHHost, options string) string {
+	var parts []string
+
+	parts = append(parts, "ssh")
+
+	// Add user-provided options first
+	if options != "" {
+		parts = append(parts, options)
+	}
+
+	// Add host-specific options from SSH config
+	if host.Port != "" && host.Port != "22" {
+		parts = append(parts, "-p", host.Port)
+	}
+
+	// Construct the connection string
+	var target string
+	if host.User != "" {
+		target = host.User + "@"
+	}
+
+	// Use HostName if available, otherwise use Name
+	if host.HostName != "" && host.HostName != host.Name {
+		target += host.HostName
+	} else {
+		target += host.Name
+	}
+
+	parts = append(parts, target)
+
+	return strings.Join(parts, " ")
 }
