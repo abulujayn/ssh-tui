@@ -7,6 +7,7 @@ import (
 	"ssh-tui/internal/parser"
 	"ssh-tui/internal/ssh"
 	"ssh-tui/internal/tui"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -17,6 +18,28 @@ func main() {
 	if err := ssh.CheckSSHAvailable(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
+	}
+
+	// If CLI args were provided, treat them as a direct ssh invocation and execute immediately.
+	// This allows users to alias ssh to ssh-tui and keep compatibility.
+	if len(os.Args) > 1 {
+		// Build command: prepend "ssh" to provided args
+		// Note: args may include options and target host (e.g., -p 2222 user@host)
+		cmd := "ssh " + strings.Join(os.Args[1:], " ")
+
+		// Validate and execute
+		if err := ssh.ValidateSSHCommand(cmd); err != nil {
+			fmt.Fprintf(os.Stderr, "Invalid SSH command: %v\n", err)
+			os.Exit(2)
+		}
+
+		if err := ssh.ExecuteSSHCommand(cmd); err != nil {
+			fmt.Fprintf(os.Stderr, "SSH execution failed: %v\n", err)
+			os.Exit(3)
+		}
+
+		// Execution replaced or returned; exit successfully
+		return
 	}
 
 	// Discover hosts
