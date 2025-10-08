@@ -84,32 +84,14 @@ func runTUIFlow(hosts []parser.SSHHost) error {
 		return nil
 	}
 
-	// Step 2: Options Entry
-	optionsEntry := tui.NewOptionsEntryModel(selectedHost)
-
-	p = tea.NewProgram(optionsEntry, tea.WithAltScreen())
-	finalModel, err = p.Run()
-	if err != nil {
-		return fmt.Errorf("failed to run options entry: %w", err)
+	// If the host selector requested to open options, continue to options entry
+	if hostModel.OpenOptionsRequested() {
+		return runOptionsFlow(selectedHost, hosts)
 	}
 
-	optionsModel, ok := finalModel.(*tui.OptionsEntryModel)
-	if !ok {
-		return fmt.Errorf("unexpected model type from options entry")
-	}
-
-	if optionsModel.IsCancelled() {
-		// User went back, restart host selection
-		return runTUIFlow(hosts)
-	}
-
-	if !optionsModel.IsConfirmed() {
-		// User cancelled
-		return nil
-	}
-
-	// Step 3: Execute SSH Command directly
-	command := optionsModel.GetCommand()
+	// If we reach here, host selector chose to execute immediately without options
+	// Build command using default/empty options
+	command := ssh.BuildSSHCommand(selectedHost, "")
 
 	// Validate the command before execution
 	if err := ssh.ValidateSSHCommand(command); err != nil {

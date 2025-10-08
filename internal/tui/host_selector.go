@@ -18,8 +18,10 @@ type HostSelectorModel struct {
 	searchActive  bool
 	selected      bool
 	selectedHost  *parser.SSHHost
-	width         int
-	height        int
+	// If true, user requested to open the options screen after selection.
+	openOptions bool
+	width       int
+	height      int
 }
 
 // NewHostSelectorModel creates a new host selector model
@@ -91,6 +93,36 @@ func (m *HostSelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else if len(m.filteredHosts) > 0 && m.cursor < len(m.filteredHosts) {
 				m.selectedHost = &m.filteredHosts[m.cursor]
 				m.selected = true
+				m.openOptions = false // Execute straight away by default on Enter
+				return m, tea.Quit
+			}
+
+		case "o":
+			// Open options for the selected host
+			if m.searchActive {
+				// If no hosts found, treat search input as custom host if valid
+				if m.searchInput != "" && len(m.filteredHosts) == 0 {
+					if parser.IsValidHost(m.searchInput) {
+						// Parse user and host from input
+						user, host := parser.ParseUserHost(m.searchInput)
+						customHost := parser.SSHHost{
+							Name:     m.searchInput,
+							HostName: host,
+							User:     user,
+							Port:     "22",
+							Source:   "custom",
+							Aliases:  nil,
+						}
+						m.selectedHost = &customHost
+						m.selected = true
+						m.openOptions = true
+						return m, tea.Quit
+					}
+				}
+			} else if len(m.filteredHosts) > 0 && m.cursor < len(m.filteredHosts) {
+				m.selectedHost = &m.filteredHosts[m.cursor]
+				m.selected = true
+				m.openOptions = true
 				return m, tea.Quit
 			}
 
@@ -168,7 +200,7 @@ func (m *HostSelectorModel) View() string {
 
 		if m.searchInput != "" {
 			if parser.IsValidHost(m.searchInput) {
-				b.WriteString(titleStyle.Render("Press Enter to use as custom host: " + m.searchInput))
+				b.WriteString(titleStyle.Render("Press Enter to connect to custom host: " + m.searchInput))
 			} else {
 				b.WriteString(errorStyle.Render("No hosts found matching: " + m.searchInput))
 			}
@@ -178,9 +210,9 @@ func (m *HostSelectorModel) View() string {
 
 		// Instructions at the bottom even when no hosts found
 		b.WriteString("\n\n")
-		instructions := "Use ↑/↓ or j/k to navigate, / to search, Enter to select, q or Ctrl+C to quit"
+		instructions := "Use ↑/↓ or j/k to navigate, / to search, Enter to connect, q or Ctrl+C to quit"
 		if m.searchActive {
-			instructions = "Type to search, Esc to exit search, Enter to select"
+			instructions = "Type to search, Esc to exit search, Enter to connect"
 		}
 
 		instructionStyle := lipgloss.NewStyle().
@@ -254,6 +286,12 @@ func (m *HostSelectorModel) View() string {
 				content.WriteString("\n" + detailTextStyle.Render(lines[j]))
 			}
 
+			// Add a subtle hint for opening options below the server info
+			hintStyle := lipgloss.NewStyle().
+				Foreground(lipgloss.Color("241")).
+				Italic(true)
+			content.WriteString("\n" + hintStyle.Render("Press 'o' for options"))
+
 			// Render the entire selection in a styled container
 			b.WriteString(selectedContainerStyle.Render(content.String()) + "\n")
 		} else {
@@ -297,9 +335,9 @@ func (m *HostSelectorModel) View() string {
 
 	// Instructions at the bottom
 	b.WriteString("\n\n")
-	instructions := "Use ↑/↓ or j/k to navigate, / to search, Enter to select, q or Ctrl+C to quit"
+	instructions := "Use ↑/↓ or j/k to navigate, / to search, Enter to connect, q or Ctrl+C to quit"
 	if m.searchActive {
-		instructions = "Type to search, Esc to exit search, Enter to select"
+		instructions = "Type to search, Esc to exit search, Enter to connect"
 	}
 
 	instructionStyle := lipgloss.NewStyle().
@@ -335,6 +373,11 @@ func (m *HostSelectorModel) GetSelectedHost() *parser.SSHHost {
 // IsSelected returns whether a host was selected
 func (m *HostSelectorModel) IsSelected() bool {
 	return m.selected
+}
+
+// OpenOptionsRequested indicates whether the user asked to open options after selection
+func (m *HostSelectorModel) OpenOptionsRequested() bool {
+	return m.openOptions
 }
 
 // formatHostLineWithAliases formats the host name line with styled aliases
