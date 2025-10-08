@@ -90,7 +90,7 @@ func FormatHostDisplay(host SSHHost) string {
 	}
 
 	if len(details) > 0 {
-		lines = append(lines, "  "+strings.Join(details, " • "))
+		lines = append(lines, strings.Join(details, " • "))
 	}
 
 	return strings.Join(lines, "\n")
