@@ -121,6 +121,15 @@ func (m *HostSelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Quit
 			}
 
+		case "tab":
+			// Open options for the selected host when possible (works during search)
+			if len(m.filteredHosts) > 0 && m.cursor < len(m.filteredHosts) {
+				m.selectedHost = &m.filteredHosts[m.cursor]
+				m.selected = true
+				m.openOptions = true
+				return m, tea.Quit
+			}
+
 		case "up":
 			// Arrow up navigates within the current filtered list
 			if m.cursor > 0 {
@@ -225,9 +234,9 @@ func (m *HostSelectorModel) View() string {
 
 		// Instructions at the bottom even when no hosts found
 		b.WriteString("\n\n")
-		instructions := "Use ↑/↓ or j/k to navigate, / to search, Enter to connect, q to quit"
+		instructions := "Use ↑/↓ or j/k to navigate, / to search, Tab for options, Enter to connect, q to quit"
 		if m.searchActive {
-			instructions = "Type to search, Esc to exit search, Enter to connect"
+			instructions = "Type to search, Esc to exit search, Tab for options, Enter to connect"
 		}
 
 		instructionStyle := lipgloss.NewStyle().
@@ -305,7 +314,7 @@ func (m *HostSelectorModel) View() string {
 			hintStyle := lipgloss.NewStyle().
 				Foreground(lipgloss.Color("241")).
 				Italic(true)
-			content.WriteString("\n" + hintStyle.Render("Press 'o' for options"))
+			content.WriteString("\n" + hintStyle.Render("Press Tab for options"))
 
 			// Render the entire selection in a styled container
 			b.WriteString(selectedContainerStyle.Render(content.String()) + "\n")
