@@ -196,17 +196,8 @@ func (m *OptionsEntryModel) View() string {
 
 	b.WriteString(commandStyle.Render(currentCommand) + "\n\n")
 
-	// Main instructions at the bottom
-	instructionStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("241")).
-		Italic(true)
-
-	executeStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("46")).
-		Bold(true)
-
-	b.WriteString(executeStyle.Render("Press Enter to execute") + " • " +
-		instructionStyle.Render("Esc to go back") + "\n\n")
+	// Main instructions at the bottom (use shared InstructionStyle)
+	b.WriteString(InstructionStyle().Render("Use Enter to execute, Esc to go back") + "\n\n")
 
 	// ...shortcuts help intentionally hidden from the UI; key handlers still active
 

@@ -312,10 +312,7 @@ func (m *HostSelectorModel) View() string {
 			}
 
 			// Add a subtle hint for opening options below the server info
-			hintStyle := lipgloss.NewStyle().
-				Foreground(lipgloss.Color("241")).
-				Italic(true)
-			content.WriteString("\n" + hintStyle.Render("Press Tab for options"))
+			content.WriteString("\n" + InstructionStyle().Render("Tab for options"))
 
 			// Render the entire selection in a styled container
 			b.WriteString(selectedContainerStyle.Render(content.String()) + "\n")
@@ -348,11 +345,7 @@ func (m *HostSelectorModel) View() string {
 			scrollInfo += " (scroll with ↑/↓)"
 		}
 
-		scrollStyle := lipgloss.NewStyle().
-			Foreground(lipgloss.Color("241")).
-			Italic(true)
-
-		b.WriteString(scrollStyle.Render(scrollInfo))
+		b.WriteString(InstructionStyle().Render(scrollInfo))
 	}
 
 	// Instructions at the bottom
@@ -362,11 +355,7 @@ func (m *HostSelectorModel) View() string {
 		instructions = "Type to search, Esc to exit search, Enter to connect"
 	}
 
-	instructionStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("241")).
-		Italic(true)
-
-	b.WriteString(instructionStyle.Render(instructions))
+	b.WriteString(InstructionStyle().Render(instructions))
 
 	return b.String()
 }
