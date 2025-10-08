@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -13,11 +14,19 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// Version is the application version string. Bump this when releasing.
+const Version = "1.0.0-alpha"
+
 func main() {
-	// Check if SSH is available
-	if err := ssh.CheckSSHAvailable(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
+	// Add a lightweight flag parsing for --version/-v and keep the rest of args intact.
+	versionFlag := flag.Bool("version", false, "Print version and exit")
+	shortVersion := flag.Bool("v", false, "Print version and exit (shorthand)")
+	// Parse only the known flags, leave others (like ssh args) in os.Args for compatibility.
+	flag.CommandLine.Parse(os.Args[1:])
+
+	if *versionFlag || *shortVersion {
+		fmt.Printf("ssh-tui %s\n", Version)
+		return
 	}
 
 	// If CLI args were provided, treat them as a direct ssh invocation and execute immediately.
