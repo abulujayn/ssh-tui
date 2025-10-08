@@ -63,7 +63,6 @@ func ParseSSHConfig() ([]SSHHost, error) {
 
 		switch key {
 		case "host":
-			// Save previous host if it exists
 			if inHostSection && currentHost.Name != "" {
 				currentHost.Source = "config"
 				hosts = append(hosts, currentHost)

@@ -6,7 +6,8 @@ import (
 	"os"
 	"ssh-tui/internal/parser"
 	"ssh-tui/internal/ssh"
-	"ssh-tui/internal/tui"
+	"ssh-tui/internal/tui/hostselector"
+	"ssh-tui/internal/tui/optionsentry"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -87,7 +88,7 @@ func showNoHostsMessage() {
 // runTUIFlow runs the complete TUI flow
 func runTUIFlow(hosts []parser.SSHHost) error {
 	// Step 1: Host Selection
-	hostSelector := tui.NewHostSelectorModel(hosts)
+	hostSelector := hostselector.NewHostSelectorModel(hosts)
 
 	p := tea.NewProgram(hostSelector, tea.WithAltScreen())
 	finalModel, err := p.Run()
@@ -95,7 +96,7 @@ func runTUIFlow(hosts []parser.SSHHost) error {
 		return fmt.Errorf("failed to run host selector: %w", err)
 	}
 
-	hostModel, ok := finalModel.(*tui.HostSelectorModel)
+	hostModel, ok := finalModel.(*hostselector.HostSelectorModel)
 	if !ok {
 		return fmt.Errorf("unexpected model type from host selector")
 	}
@@ -131,7 +132,7 @@ func runTUIFlow(hosts []parser.SSHHost) error {
 // runOptionsFlow runs the options entry and subsequent steps (for back navigation)
 func runOptionsFlow(selectedHost *parser.SSHHost, hosts []parser.SSHHost) error {
 	// Step 2: Options Entry
-	optionsEntry := tui.NewOptionsEntryModel(selectedHost)
+	optionsEntry := optionsentry.NewOptionsEntryModel(selectedHost)
 
 	p := tea.NewProgram(optionsEntry, tea.WithAltScreen())
 	finalModel, err := p.Run()
@@ -139,7 +140,7 @@ func runOptionsFlow(selectedHost *parser.SSHHost, hosts []parser.SSHHost) error 
 		return fmt.Errorf("failed to run options entry: %w", err)
 	}
 
-	optionsModel, ok := finalModel.(*tui.OptionsEntryModel)
+	optionsModel, ok := finalModel.(*optionsentry.OptionsEntryModel)
 	if !ok {
 		return fmt.Errorf("unexpected model type from options entry")
 	}
