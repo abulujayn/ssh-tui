@@ -41,7 +41,7 @@ Simply run the command without any arguments:
 
 ### TUI Flow
 
-1. **Host Selection**: Use arrow keys or `j`/`k` to navigate, `/` to search, `Enter` to select
+1. **Host Selection**: Use arrow keys to navigate, `/` to search, `Enter` to select
 2. **Options Entry**: Enter SSH options and arguments (optional), press `Enter` to continue
 3. **Command Preview**: Review the final SSH command, press `Y` to confirm or `N` to go back
 4. **Connection**: SSH connection is established
@@ -49,7 +49,7 @@ Simply run the command without any arguments:
 ### Keyboard Shortcuts
 
 #### Host Selection Screen
-- `↑`/`↓` or `j`/`k`: Navigate hosts
+- `↑`/`↓`: Navigate hosts
 - `/`: Toggle search mode
 - `Enter`: Select host
 - `Esc`: Exit search or quit

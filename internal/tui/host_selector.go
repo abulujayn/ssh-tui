@@ -15,7 +15,6 @@ type HostSelectorModel struct {
 	filteredHosts []parser.SSHHost
 	cursor        int
 	searchInput   string
-	searchActive  bool
 	selected      bool
 	selectedHost  *parser.SSHHost
 	// If true, user requested to open the options screen after selection.
@@ -30,7 +29,6 @@ func NewHostSelectorModel(hosts []parser.SSHHost) *HostSelectorModel {
 		hosts:         hosts,
 		filteredHosts: hosts,
 		cursor:        0,
-		searchActive:  false,
 		selected:      false,
 	}
 }
@@ -52,17 +50,11 @@ func (m *HostSelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 
-		case "/":
-			if !m.searchActive {
-				// Toggle search mode
-				m.searchActive = true
-				m.cursor = 0
-			}
+			// Removed special handling for "/" so it's treated like normal typing
 
 		case "esc":
-			// Exit search mode
-			if m.searchActive {
-				m.searchActive = false
+			// If there's search input, clear it; otherwise quit the app
+			if m.searchInput != "" {
 				m.searchInput = ""
 				m.filteredHosts = m.hosts
 				m.cursor = 0
@@ -71,58 +63,41 @@ func (m *HostSelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "enter":
-			if m.searchActive {
-				// If there are filtered hosts, select the focused one
-				if len(m.filteredHosts) > 0 && m.cursor < len(m.filteredHosts) {
-					m.selectedHost = &m.filteredHosts[m.cursor]
-					m.selected = true
-					m.openOptions = false // Execute straight away by default on Enter
-					return m, tea.Quit
-				}
-				// If no hosts found, treat search input as custom host if valid
-				if m.searchInput != "" && len(m.filteredHosts) == 0 {
-					if parser.IsValidHost(m.searchInput) {
-						// Parse user and host from input
-						user, host := parser.ParseUserHost(m.searchInput)
-						customHost := parser.SSHHost{
-							Name:     m.searchInput,
-							HostName: host,
-							User:     user,
-							Port:     "22",
-							Source:   "custom",
-							Aliases:  nil,
-						}
-						m.selectedHost = &customHost
-						m.selected = true
-						return m, tea.Quit
-					}
-				}
-			} else if len(m.filteredHosts) > 0 && m.cursor < len(m.filteredHosts) {
-				// Not in search mode: select the focused host
+			// If there are filtered hosts, select the focused one
+			if len(m.filteredHosts) > 0 && m.cursor < len(m.filteredHosts) {
 				m.selectedHost = &m.filteredHosts[m.cursor]
 				m.selected = true
 				m.openOptions = false // Execute straight away by default on Enter
 				return m, tea.Quit
 			}
 
-		case "o":
-			// If search is active, treat 'o' as input (so users can type the letter 'o')
-			if m.searchActive {
-				m.searchInput += "o"
-				m.updateFilter()
-				break
+			// If no hosts found, treat search input as custom host if valid
+			if m.searchInput != "" && len(m.filteredHosts) == 0 {
+				if parser.IsValidHost(m.searchInput) {
+					// Parse user and host from input
+					user, host := parser.ParseUserHost(m.searchInput)
+					customHost := parser.SSHHost{
+						Name:     m.searchInput,
+						HostName: host,
+						User:     user,
+						Port:     "22",
+						Source:   "custom",
+						Aliases:  nil,
+					}
+					m.selectedHost = &customHost
+					m.selected = true
+					return m, tea.Quit
+				}
 			}
 
-			// Open options for the selected host when not searching
-			if len(m.filteredHosts) > 0 && m.cursor < len(m.filteredHosts) {
-				m.selectedHost = &m.filteredHosts[m.cursor]
-				m.selected = true
-				m.openOptions = true
-				return m, tea.Quit
-			}
+		case "o":
+			// Treat 'o' as input to search (search is always active)
+			m.searchInput += "o"
+			m.updateFilter()
+			break
 
 		case "tab":
-			// Open options for the selected host when possible (works during search)
+			// Open options for the selected host when possible (works while searching)
 			if len(m.filteredHosts) > 0 && m.cursor < len(m.filteredHosts) {
 				m.selectedHost = &m.filteredHosts[m.cursor]
 				m.selected = true
@@ -130,9 +105,8 @@ func (m *HostSelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Quit
 			}
 
-			// If searching and no filtered hosts, but the user typed a valid custom host,
-			// treat Tab as request to open options for that custom host.
-			if m.searchActive && len(m.filteredHosts) == 0 && m.searchInput != "" {
+			// If no filtered hosts, but the user typed a valid custom host, open options
+			if len(m.filteredHosts) == 0 && m.searchInput != "" {
 				if parser.IsValidHost(m.searchInput) {
 					user, host := parser.ParseUserHost(m.searchInput)
 					customHost := parser.SSHHost{
@@ -155,50 +129,30 @@ func (m *HostSelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.cursor > 0 {
 				m.cursor--
 			}
-		case "k":
-			if m.searchActive {
-				// treat as input
-				m.searchInput += "k"
-				m.updateFilter()
-			} else if m.cursor > 0 {
-				// 'k' navigation when not searching
-				m.cursor--
-			}
+			// Note: 'k' key intentionally not supported for navigation; only arrow keys are used.
 
 		case "down":
 			// Arrow down navigates within the current filtered list
 			if m.cursor < len(m.filteredHosts)-1 {
 				m.cursor++
 			}
-		case "j":
-			if m.searchActive {
-				// treat as input
-				m.searchInput += "j"
-				m.updateFilter()
-			} else if m.cursor < len(m.filteredHosts)-1 {
-				// 'j' navigation when not searching
-				m.cursor++
-			}
+			// Note: 'j' key intentionally not supported for navigation; only arrow keys are used.
 
 		case "backspace":
-			if m.searchActive && len(m.searchInput) > 0 {
+			if len(m.searchInput) > 0 {
 				m.searchInput = m.searchInput[:len(m.searchInput)-1]
 				m.updateFilter()
 			}
 
-		case "q":
-			if m.searchActive {
-				// treat as input
-				m.searchInput += "q"
-				m.updateFilter()
-			} else {
-				return m, tea.Quit
-			}
-
 		default:
-			if m.searchActive && len(msg.String()) == 1 {
-				m.searchInput += msg.String()
+			// If it's a single printable character, treat it as typing input.
+			// If search is not yet active, enable it and start the search with this char.
+			if len(msg.String()) == 1 {
+				ch := msg.String()
+				// Always treat printable characters as search input
+				m.searchInput += ch
 				m.updateFilter()
+				m.cursor = 0
 			}
 		}
 	}
@@ -222,15 +176,8 @@ func (m *HostSelectorModel) View() string {
 	searchStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("86"))
 
-	if m.searchActive {
-		b.WriteString(searchStyle.Render("Search: "+m.searchInput+"_") + "\n\n")
-	} else {
-		if m.searchInput != "" {
-			b.WriteString(searchStyle.Render("Search: "+m.searchInput+" (press / to edit)") + "\n\n")
-		} else {
-			b.WriteString(searchStyle.Render("Press / to search") + "\n\n")
-		}
-	}
+	// Always show the search input as active (always focused)
+	b.WriteString(searchStyle.Render("Search: "+m.searchInput+"_") + "\n\n")
 
 	// Host list
 	if len(m.filteredHosts) == 0 {
@@ -254,10 +201,7 @@ func (m *HostSelectorModel) View() string {
 
 		// Instructions at the bottom even when no hosts found
 		b.WriteString("\n\n")
-		instructions := "Use ↑/↓ or j/k to navigate, / to search, Tab for options, Enter to connect, q to quit"
-		if m.searchActive {
-			instructions = "Type to search, Esc to exit search, Tab for options, Enter to connect"
-		}
+		instructions := "Use ↑/↓ to navigate, Tab for options, Enter to connect"
 
 		instructionStyle := lipgloss.NewStyle().
 			Foreground(lipgloss.Color("241")).
@@ -370,10 +314,7 @@ func (m *HostSelectorModel) View() string {
 
 	// Instructions at the bottom
 	b.WriteString("\n\n")
-	instructions := "Use ↑/↓ or j/k to navigate, / to search, Enter to connect, q to quit"
-	if m.searchActive {
-		instructions = "Type to search, Esc to exit search, Enter to connect"
-	}
+	instructions := "Use ↑/↓ to navigate, Tab for options, Enter to connect"
 
 	b.WriteString(InstructionStyle().Render(instructions))
 
