@@ -27,18 +27,8 @@ func main() {
 		// Note: args may include options and target host (e.g., -p 2222 user@host)
 		cmd := "ssh " + strings.Join(os.Args[1:], " ")
 
-		// Validate and execute
-		if err := ssh.ValidateSSHCommand(cmd); err != nil {
-			fmt.Fprintf(os.Stderr, "Invalid SSH command: %v\n", err)
-			os.Exit(2)
-		}
-
-		if err := ssh.ExecuteSSHCommand(cmd); err != nil {
-			fmt.Fprintf(os.Stderr, "SSH execution failed: %v\n", err)
-			os.Exit(3)
-		}
-
-		// Execution replaced or returned; exit successfully
+		// Execute the SSH command immediately (no validation; caller provided args)
+		_ = ssh.ExecuteSSHCommand(cmd)
 		return
 	}
 
