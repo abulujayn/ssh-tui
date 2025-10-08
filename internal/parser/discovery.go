@@ -56,13 +56,75 @@ func FilterHosts(hosts []SSHHost, searchTerm string) []SSHHost {
 	var filtered []SSHHost
 	searchLower := strings.ToLower(searchTerm)
 
+	// Prioritization strategy with aliases:
+	// 1) Hosts where an alias exactly matches the search term (highest priority)
+	// 2) Primary name/hostname prefix matches
+	// 3) Primary name/hostname substring matches
+	// 4) Alias prefix matches
+	// 5) Alias substring matches
+	// Within each bucket, preserve input order.
+
+	var exactAliasMatches []SSHHost
+	var primaryPrefix []SSHHost
+	var primaryContains []SSHHost
+	var aliasPrefix []SSHHost
+	var aliasContains []SSHHost
+
 	for _, host := range hosts {
-		// Search in host name and hostname
-		if strings.Contains(strings.ToLower(host.Name), searchLower) ||
-			strings.Contains(strings.ToLower(host.HostName), searchLower) {
-			filtered = append(filtered, host)
+		nameLower := strings.ToLower(host.Name)
+		hostLower := strings.ToLower(host.HostName)
+
+		// Check exact alias matches first
+		matchedExactAlias := false
+		for _, a := range host.Aliases {
+			if strings.ToLower(a) == searchLower {
+				exactAliasMatches = append(exactAliasMatches, host)
+				matchedExactAlias = true
+				break
+			}
+		}
+		if matchedExactAlias {
+			continue
+		}
+
+		// Primary name/hostname prefix
+		if strings.HasPrefix(nameLower, searchLower) || strings.HasPrefix(hostLower, searchLower) {
+			primaryPrefix = append(primaryPrefix, host)
+			continue
+		}
+
+		// Primary name/hostname contains
+		if strings.Contains(nameLower, searchLower) || strings.Contains(hostLower, searchLower) {
+			primaryContains = append(primaryContains, host)
+			continue
+		}
+
+		// Check aliases for prefix/contains matches
+		aliasMatched := false
+		for _, a := range host.Aliases {
+			aLower := strings.ToLower(a)
+			if strings.HasPrefix(aLower, searchLower) {
+				aliasPrefix = append(aliasPrefix, host)
+				aliasMatched = true
+				break
+			}
+			if strings.Contains(aLower, searchLower) {
+				aliasContains = append(aliasContains, host)
+				aliasMatched = true
+				break
+			}
+		}
+		if aliasMatched {
+			continue
 		}
 	}
+
+	// Append groups in priority order
+	filtered = append(filtered, exactAliasMatches...)
+	filtered = append(filtered, primaryPrefix...)
+	filtered = append(filtered, primaryContains...)
+	filtered = append(filtered, aliasPrefix...)
+	filtered = append(filtered, aliasContains...)
 
 	return filtered
 }

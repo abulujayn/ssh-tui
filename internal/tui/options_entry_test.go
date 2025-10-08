@@ -2,6 +2,7 @@ package tui
 
 import (
 	"ssh-tui/internal/parser"
+	"ssh-tui/internal/ssh"
 	"testing"
 )
 
@@ -16,14 +17,14 @@ func TestBuildSSHCommand_ConfigHost(t *testing.T) {
 	}
 
 	// Test without additional options
-	command := buildSSHCommand(configHost, "")
+	command := ssh.BuildSSHCommand(configHost, "")
 	expected := "ssh myserver"
 	if command != expected {
 		t.Errorf("Expected '%s', got '%s'", expected, command)
 	}
 
 	// Test with additional options
-	command = buildSSHCommand(configHost, "-L 8080:localhost:80")
+	command = ssh.BuildSSHCommand(configHost, "-L 8080:localhost:80")
 	expected = "ssh myserver -L 8080:localhost:80"
 	if command != expected {
 		t.Errorf("Expected '%s', got '%s'", expected, command)
@@ -41,14 +42,14 @@ func TestBuildSSHCommand_KnownHost(t *testing.T) {
 	}
 
 	// Test without additional options
-	command := buildSSHCommand(knownHost, "")
+	command := ssh.BuildSSHCommand(knownHost, "")
 	expected := "ssh -p 2222 admin@server.example.com"
 	if command != expected {
 		t.Errorf("Expected '%s', got '%s'", expected, command)
 	}
 
 	// Test with additional options
-	command = buildSSHCommand(knownHost, "-i ~/.ssh/key")
+	command = ssh.BuildSSHCommand(knownHost, "-i ~/.ssh/key")
 	expected = "ssh -p 2222 admin@server.example.com -i ~/.ssh/key"
 	if command != expected {
 		t.Errorf("Expected '%s', got '%s'", expected, command)
@@ -65,7 +66,7 @@ func TestBuildSSHCommand_ConfigHostWithDefaultPort(t *testing.T) {
 		Source:   "config",
 	}
 
-	command := buildSSHCommand(configHost, "")
+	command := ssh.BuildSSHCommand(configHost, "")
 	expected := "ssh webserver"
 	if command != expected {
 		t.Errorf("Expected '%s', got '%s'", expected, command)
@@ -82,7 +83,7 @@ func TestBuildSSHCommand_KnownHostWithDefaultPort(t *testing.T) {
 		Source:   "known_hosts",
 	}
 
-	command := buildSSHCommand(knownHost, "")
+	command := ssh.BuildSSHCommand(knownHost, "")
 	expected := "ssh admin@server.example.com"
 	if command != expected {
 		t.Errorf("Expected '%s', got '%s'", expected, command)

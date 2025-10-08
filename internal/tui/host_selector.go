@@ -72,6 +72,13 @@ func (m *HostSelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "enter":
 			if m.searchActive {
+				// If there are filtered hosts, select the focused one
+				if len(m.filteredHosts) > 0 && m.cursor < len(m.filteredHosts) {
+					m.selectedHost = &m.filteredHosts[m.cursor]
+					m.selected = true
+					m.openOptions = false // Execute straight away by default on Enter
+					return m, tea.Quit
+				}
 				// If no hosts found, treat search input as custom host if valid
 				if m.searchInput != "" && len(m.filteredHosts) == 0 {
 					if parser.IsValidHost(m.searchInput) {
@@ -91,6 +98,7 @@ func (m *HostSelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					}
 				}
 			} else if len(m.filteredHosts) > 0 && m.cursor < len(m.filteredHosts) {
+				// Not in search mode: select the focused host
 				m.selectedHost = &m.filteredHosts[m.cursor]
 				m.selected = true
 				m.openOptions = false // Execute straight away by default on Enter
@@ -98,41 +106,48 @@ func (m *HostSelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "o":
-			// Open options for the selected host
+			// If search is active, treat 'o' as input (so users can type the letter 'o')
 			if m.searchActive {
-				// If no hosts found, treat search input as custom host if valid
-				if m.searchInput != "" && len(m.filteredHosts) == 0 {
-					if parser.IsValidHost(m.searchInput) {
-						// Parse user and host from input
-						user, host := parser.ParseUserHost(m.searchInput)
-						customHost := parser.SSHHost{
-							Name:     m.searchInput,
-							HostName: host,
-							User:     user,
-							Port:     "22",
-							Source:   "custom",
-							Aliases:  nil,
-						}
-						m.selectedHost = &customHost
-						m.selected = true
-						m.openOptions = true
-						return m, tea.Quit
-					}
-				}
-			} else if len(m.filteredHosts) > 0 && m.cursor < len(m.filteredHosts) {
+				m.searchInput += "o"
+				m.updateFilter()
+				break
+			}
+
+			// Open options for the selected host when not searching
+			if len(m.filteredHosts) > 0 && m.cursor < len(m.filteredHosts) {
 				m.selectedHost = &m.filteredHosts[m.cursor]
 				m.selected = true
 				m.openOptions = true
 				return m, tea.Quit
 			}
 
-		case "up", "k":
-			if !m.searchActive && m.cursor > 0 {
+		case "up":
+			// Arrow up navigates within the current filtered list
+			if m.cursor > 0 {
+				m.cursor--
+			}
+		case "k":
+			if m.searchActive {
+				// treat as input
+				m.searchInput += "k"
+				m.updateFilter()
+			} else if m.cursor > 0 {
+				// 'k' navigation when not searching
 				m.cursor--
 			}
 
-		case "down", "j":
-			if !m.searchActive && m.cursor < len(m.filteredHosts)-1 {
+		case "down":
+			// Arrow down navigates within the current filtered list
+			if m.cursor < len(m.filteredHosts)-1 {
+				m.cursor++
+			}
+		case "j":
+			if m.searchActive {
+				// treat as input
+				m.searchInput += "j"
+				m.updateFilter()
+			} else if m.cursor < len(m.filteredHosts)-1 {
+				// 'j' navigation when not searching
 				m.cursor++
 			}
 
@@ -353,13 +368,8 @@ func (m *HostSelectorModel) View() string {
 func (m *HostSelectorModel) updateFilter() {
 	m.filteredHosts = parser.FilterHosts(m.hosts, m.searchInput)
 
-	// Reset cursor if it's out of bounds
-	if m.cursor >= len(m.filteredHosts) {
-		m.cursor = 0
-	}
-	if len(m.filteredHosts) > 0 && m.cursor < 0 {
-		m.cursor = 0
-	}
+	// Whenever the filter changes (search input modified), reset focus to the first entry
+	m.cursor = 0
 }
 
 // GetSelectedHost returns the selected host
