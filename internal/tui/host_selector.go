@@ -247,9 +247,10 @@ func (m *HostSelectorModel) View() string {
 		return b.String()
 	}
 
-	// Calculate visible range for scrolling - account for single-line hosts (1 line each + spacing)
+	// Calculate visible range for scrolling - account for single-line hosts (1 line each)
 	// Only focused host shows details, others show just the name
-	linesPerHost := 2                           // 1 line for host + 1 line spacing
+	// Use 1 line per host to reduce vertical spacing between entries
+	linesPerHost := 1
 	maxVisible := (m.height - 8) / linesPerHost // Account for header, search, and bottom instructions
 	if maxVisible < 3 {
 		maxVisible = 3
@@ -337,10 +338,7 @@ func (m *HostSelectorModel) View() string {
 			// Skip rendering additional lines (details) for non-focused hosts
 		}
 
-		// Add spacing between hosts (except for the last one)
-		if i < end-1 {
-			b.WriteString("\n")
-		}
+		// Intentionally avoid adding extra blank lines between hosts to keep list compact
 	}
 
 	// Show scroll indicator if needed
