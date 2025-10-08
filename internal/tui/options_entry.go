@@ -206,22 +206,9 @@ func (m *OptionsEntryModel) View() string {
 		Bold(true)
 
 	b.WriteString(executeStyle.Render("Press Enter to execute") + " • " +
-		instructionStyle.Render("Esc to go back • Ctrl+C to quit") + "\n\n")
+		instructionStyle.Render("Esc to go back") + "\n\n")
 
-	// Keyboard shortcuts help
-	shortcuts := []string{
-		"Ctrl+A: Home",
-		"Ctrl+E: End",
-		"Ctrl+U: Clear to beginning",
-		"Ctrl+K: Clear to end",
-		"Ctrl+W: Delete word back",
-	}
-
-	shortcutStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("241")).
-		Italic(true)
-
-	b.WriteString(shortcutStyle.Render(strings.Join(shortcuts, " • ")))
+	// ...shortcuts help intentionally hidden from the UI; key handlers still active
 
 	return b.String()
 }

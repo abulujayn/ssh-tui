@@ -210,7 +210,7 @@ func (m *HostSelectorModel) View() string {
 
 		// Instructions at the bottom even when no hosts found
 		b.WriteString("\n\n")
-		instructions := "Use ↑/↓ or j/k to navigate, / to search, Enter to connect, q or Ctrl+C to quit"
+		instructions := "Use ↑/↓ or j/k to navigate, / to search, Enter to connect, q to quit"
 		if m.searchActive {
 			instructions = "Type to search, Esc to exit search, Enter to connect"
 		}
@@ -335,7 +335,7 @@ func (m *HostSelectorModel) View() string {
 
 	// Instructions at the bottom
 	b.WriteString("\n\n")
-	instructions := "Use ↑/↓ or j/k to navigate, / to search, Enter to connect, q or Ctrl+C to quit"
+	instructions := "Use ↑/↓ or j/k to navigate, / to search, Enter to connect, q to quit"
 	if m.searchActive {
 		instructions = "Type to search, Esc to exit search, Enter to connect"
 	}

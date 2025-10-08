@@ -53,7 +53,7 @@ Simply run the command without any arguments:
 - `/`: Toggle search mode
 - `Enter`: Select host
 - `Esc`: Exit search or quit
-- `q` or `Ctrl+C`: Quit
+- `q`: Quit
 
 #### Options Entry Screen
 - `Ctrl+A`: Move to beginning
