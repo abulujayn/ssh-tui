@@ -133,12 +133,13 @@ func (m *OptionsEntryModel) View() string {
 	// Selected host info in table format
 	b.WriteString(m.renderHostInfoTable() + "\n\n")
 
-	// Description
-	descriptionStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("241"))
+	// Options label (styled like a field label similar to Command Preview)
+	optionsLabel := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("183")).
+		Bold(true).
+		Render("Options:")
 
-	b.WriteString(descriptionStyle.Render("Enter SSH options and arguments (optional):") + "\n")
-	b.WriteString(descriptionStyle.Render("Examples: -L 8080:localhost:80 -i ~/.ssh/id_rsa -p 2222 -X") + "\n\n")
+	b.WriteString(optionsLabel + "\n")
 
 	// Input field
 	inputStyle := lipgloss.NewStyle().
@@ -173,7 +174,13 @@ func (m *OptionsEntryModel) View() string {
 
 	b.WriteString(inputStyle.Render(inputDisplay))
 
-	b.WriteString("\n\n")
+	b.WriteString("\n")
+
+	// Examples label (muted description under the input)
+	examplesStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("241"))
+
+	b.WriteString(examplesStyle.Render("Examples: -L 8080:localhost:80 -i ~/.ssh/id_rsa -p 2222 -X") + "\n\n")
 
 	// Command Preview Section
 	commandPreviewTitle := lipgloss.NewStyle().
@@ -183,18 +190,10 @@ func (m *OptionsEntryModel) View() string {
 
 	b.WriteString(commandPreviewTitle + "\n")
 
-	// Show the current command that would be executed
+	// Show the current command that would be executed as plain text
 	currentCommand := m.GetCommand()
-	commandStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("86")).
-		Padding(0, 1).
-		Background(lipgloss.Color("236")).
-		Foreground(lipgloss.Color("252")).
-		Bold(true).
-		Width(max(60, m.width-10))
-
-	b.WriteString(commandStyle.Render(currentCommand) + "\n\n")
+	// Render as plain default text (no styling)
+	b.WriteString(currentCommand + "\n\n")
 
 	// Main instructions at the bottom (use shared InstructionStyle)
 	b.WriteString(InstructionStyle().Render("Use Enter to execute, Esc to go back") + "\n\n")
