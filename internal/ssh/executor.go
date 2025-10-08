@@ -26,6 +26,11 @@ func ExecuteSSHCommand(command string) error {
 	// Prepare arguments (skip the "ssh" part since we have the full path)
 	args := parts[1:]
 
+	// Print only the full command before executing so the user can see exactly what's run.
+	// Style it with ANSI color codes to differentiate from the SSH session output.
+	// Bold cyan: \x1b[1;36m ... \x1b[0m
+	fmt.Println("\x1b[1;36m" + strings.Join(parts, " ") + "\x1b[0m")
+
 	// Execute based on platform
 	switch runtime.GOOS {
 	case "windows":
