@@ -130,6 +130,26 @@ func (m *HostSelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Quit
 			}
 
+			// If searching and no filtered hosts, but the user typed a valid custom host,
+			// treat Tab as request to open options for that custom host.
+			if m.searchActive && len(m.filteredHosts) == 0 && m.searchInput != "" {
+				if parser.IsValidHost(m.searchInput) {
+					user, host := parser.ParseUserHost(m.searchInput)
+					customHost := parser.SSHHost{
+						Name:     m.searchInput,
+						HostName: host,
+						User:     user,
+						Port:     "22",
+						Source:   "custom",
+						Aliases:  nil,
+					}
+					m.selectedHost = &customHost
+					m.selected = true
+					m.openOptions = true
+					return m, tea.Quit
+				}
+			}
+
 		case "up":
 			// Arrow up navigates within the current filtered list
 			if m.cursor > 0 {
