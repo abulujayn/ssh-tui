@@ -72,7 +72,6 @@ func (m *OptionsEntryModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Handle regular character input
 			if len(msg.String()) == 1 {
 				char := msg.String()
-				// Insert character at cursor position
 				m.options = m.options[:m.cursor] + char + m.options[m.cursor:]
 				m.cursor++
 			}

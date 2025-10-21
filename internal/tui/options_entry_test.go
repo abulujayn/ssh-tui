@@ -38,7 +38,7 @@ func TestBuildSSHCommand_KnownHost(t *testing.T) {
 		HostName: "server.example.com",
 		User:     "admin",
 		Port:     "2222",
-		Source:   "known_hosts",
+		Source:   parser.SourceKnownHosts,
 	}
 
 	// Test without additional options
@@ -79,8 +79,8 @@ func TestBuildSSHCommand_KnownHostWithDefaultPort(t *testing.T) {
 		Name:     "server.example.com",
 		HostName: "server.example.com",
 		User:     "admin",
-		Port:     "22", // Default port
-		Source:   "known_hosts",
+		Port:     parser.DefaultSSHPort, // Default port
+		Source:   parser.SourceKnownHosts,
 	}
 
 	command := ssh.BuildSSHCommand(knownHost, "")

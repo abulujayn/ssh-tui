@@ -34,7 +34,7 @@ func (m *HostSelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if len(m.filteredHosts) > 0 && m.cursor < len(m.filteredHosts) {
 				m.selectedHost = &m.filteredHosts[m.cursor]
 				m.selected = true
-				m.openOptions = false // Execute straight away by default on Enter
+				m.openOptions = false
 				return m, tea.Quit
 			}
 
@@ -47,12 +47,6 @@ func (m *HostSelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, tea.Quit
 				}
 			}
-
-		case "o":
-			// Treat 'o' as input to search (search is always active)
-			m.searchInput += "o"
-			m.updateFilter()
-			break
 
 		case "tab":
 			// Open options for the selected host when possible (works while searching)
@@ -75,13 +69,11 @@ func (m *HostSelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "up":
-			// Arrow up navigates within the current filtered list
 			if m.cursor > 0 {
 				m.cursor--
 			}
 
 		case "down":
-			// Arrow down navigates within the current filtered list
 			if m.cursor < len(m.filteredHosts)-1 {
 				m.cursor++
 			}
@@ -94,10 +86,8 @@ func (m *HostSelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		default:
 			// If it's a single printable character, treat it as typing input.
-			// If search is not yet active, enable it and start the search with this char.
 			if len(msg.String()) == 1 {
 				ch := msg.String()
-				// Always treat printable characters as search input
 				m.searchInput += ch
 				m.updateFilter()
 				m.cursor = 0

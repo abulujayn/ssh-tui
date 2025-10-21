@@ -12,8 +12,7 @@ func BuildSSHCommand(host *parser.SSHHost, options string) string {
 	parts = append(parts, "ssh")
 
 	// If the host is from SSH config, just use the host name directly
-	// SSH will handle the configuration expansion automatically
-	if host.Source == "config" {
+	if host.Source == parser.SourceConfig {
 		parts = append(parts, host.Name)
 		if options != "" {
 			parts = append(parts, options)
@@ -22,18 +21,15 @@ func BuildSSHCommand(host *parser.SSHHost, options string) string {
 	}
 
 	// For hosts from known_hosts or other sources, expand the configuration
-	// Add host-specific options from SSH config
-	if host.Port != "" && host.Port != "22" {
+	if host.Port != "" && host.Port != parser.DefaultSSHPort {
 		parts = append(parts, "-p", host.Port)
 	}
 
-	// Construct the connection string
 	var target string
 	if host.User != "" {
 		target = host.User + "@"
 	}
 
-	// Use HostName if available, otherwise use Name
 	if host.HostName != "" && host.HostName != host.Name {
 		target += host.HostName
 	} else {
@@ -42,7 +38,6 @@ func BuildSSHCommand(host *parser.SSHHost, options string) string {
 
 	parts = append(parts, target)
 
-	// Add user-provided options after the host/target
 	if options != "" {
 		parts = append(parts, options)
 	}

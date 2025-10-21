@@ -5,24 +5,41 @@ import (
 	"strings"
 )
 
+// matchesTerm checks if the search term matches any of the given strings in various ways
+// Returns the priority level: 1=exact, 2=prefix, 3=contains, 0=no match
+func matchesTerm(searchTerm string, candidates []string) int {
+	searchLower := strings.ToLower(searchTerm)
+	for _, cand := range candidates {
+		if strings.EqualFold(cand, searchTerm) {
+			return 1 // exact
+		}
+		candLower := strings.ToLower(cand)
+		if strings.HasPrefix(candLower, searchLower) {
+			return 2 // prefix
+		}
+		if strings.Contains(candLower, searchLower) {
+			return 3 // contains
+		}
+	}
+	return 0 // no match
+}
+
 // DiscoverHosts discovers all SSH hosts from both config and known_hosts files
 func DiscoverHosts() ([]SSHHost, error) {
 	var allHosts []SSHHost
 
-	// Parse SSH config
 	configHosts, err := ParseSSHConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse SSH config: %w", err)
 	}
 
-	// Parse known_hosts
 	knownHosts, err := ParseKnownHosts()
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse known_hosts: %w", err)
 	}
 
 	// Merge hosts with deduplication while preserving config order
-	hostMap := make(map[string]bool) // Track which hosts we've already seen
+	hostMap := make(map[string]bool)
 
 	// Add config hosts first (preserving their original order)
 	for _, host := range configHosts {
@@ -42,8 +59,6 @@ func DiscoverHosts() ([]SSHHost, error) {
 		}
 	}
 
-	// No sorting needed - hosts are already in config order, with known_hosts appended
-
 	return allHosts, nil
 }
 
@@ -54,7 +69,6 @@ func FilterHosts(hosts []SSHHost, searchTerm string) []SSHHost {
 	}
 
 	var filtered []SSHHost
-	searchLower := strings.ToLower(searchTerm)
 
 	// Prioritization strategy with aliases:
 	// 1) Hosts where an alias exactly matches the search term (highest priority)
@@ -71,51 +85,30 @@ func FilterHosts(hosts []SSHHost, searchTerm string) []SSHHost {
 	var aliasContains []SSHHost
 
 	for _, host := range hosts {
-		nameLower := strings.ToLower(host.Name)
-		hostLower := strings.ToLower(host.HostName)
+		// Check exact alias match first
+		if match := matchesTerm(searchTerm, host.Aliases); match == 1 {
+			exactAliasMatches = append(exactAliasMatches, host)
+			continue
+		}
 
-		// Check exact alias matches first
-		matchedExactAlias := false
-		for _, a := range host.Aliases {
-			if strings.ToLower(a) == searchLower {
-				exactAliasMatches = append(exactAliasMatches, host)
-				matchedExactAlias = true
-				break
+		// Primary name/hostname matches
+		primaryCandidates := []string{host.Name, host.HostName}
+		if match := matchesTerm(searchTerm, primaryCandidates); match > 0 {
+			if match == 2 {
+				primaryPrefix = append(primaryPrefix, host)
+			} else {
+				primaryContains = append(primaryContains, host)
 			}
-		}
-		if matchedExactAlias {
 			continue
 		}
 
-		// Primary name/hostname prefix
-		if strings.HasPrefix(nameLower, searchLower) || strings.HasPrefix(hostLower, searchLower) {
-			primaryPrefix = append(primaryPrefix, host)
-			continue
-		}
-
-		// Primary name/hostname contains
-		if strings.Contains(nameLower, searchLower) || strings.Contains(hostLower, searchLower) {
-			primaryContains = append(primaryContains, host)
-			continue
-		}
-
-		// Check aliases for prefix/contains matches
-		aliasMatched := false
-		for _, a := range host.Aliases {
-			aLower := strings.ToLower(a)
-			if strings.HasPrefix(aLower, searchLower) {
+		// Alias prefix/contains matches
+		if match := matchesTerm(searchTerm, host.Aliases); match > 0 {
+			if match == 2 {
 				aliasPrefix = append(aliasPrefix, host)
-				aliasMatched = true
-				break
-			}
-			if strings.Contains(aLower, searchLower) {
+			} else {
 				aliasContains = append(aliasContains, host)
-				aliasMatched = true
-				break
 			}
-		}
-		if aliasMatched {
-			continue
 		}
 	}
 
@@ -133,18 +126,15 @@ func FilterHosts(hosts []SSHHost, searchTerm string) []SSHHost {
 func FormatHostDisplay(host SSHHost) string {
 	var lines []string
 
-	// Main host line - just the name (aliases are handled in TUI styling)
 	lines = append(lines, host.Name)
 
-	// Build details line with hostname, user, port
 	var details []string
 
-	// Add hostname if different from name
 	if host.HostName != "" && host.HostName != host.Name {
 		details = append(details, fmt.Sprintf("host: %s", host.HostName))
 	}
 
-	if host.Port != "" && host.Port != "22" {
+	if host.Port != "" && host.Port != DefaultSSHPort {
 		details = append(details, fmt.Sprintf("port: %s", host.Port))
 	}
 

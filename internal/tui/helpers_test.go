@@ -11,8 +11,8 @@ func TestBuildCustomHost(t *testing.T) {
 		in   string
 		want parser.SSHHost
 	}{
-		{"user@example.com", parser.SSHHost{Name: "user@example.com", HostName: "example.com", User: "user", Port: "22", Source: "custom"}},
-		{"example.org", parser.SSHHost{Name: "example.org", HostName: "example.org", User: "", Port: "22", Source: "custom"}},
+		{"user@example.com", parser.SSHHost{Name: "user@example.com", HostName: "example.com", User: "user", Port: parser.DefaultSSHPort, Source: parser.SourceCustom}},
+		{"example.org", parser.SSHHost{Name: "example.org", HostName: "example.org", User: "", Port: parser.DefaultSSHPort, Source: parser.SourceCustom}},
 	}
 
 	for _, c := range cases {

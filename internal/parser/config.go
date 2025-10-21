@@ -13,27 +13,31 @@ type SSHHost struct {
 	HostName string
 	User     string
 	Port     string
-	Source   string   // "config" or "known_hosts"
-	Aliases  []string // Alternative names for this host
+	Source   string
+	Aliases  []string
 }
+
+const (
+	SourceConfig     = "config"
+	SourceKnownHosts = "known_hosts"
+	SourceCustom     = "custom"
+	DefaultSSHPort   = "22"
+)
 
 // ParseSSHConfig parses the SSH config file and returns a list of hosts
 func ParseSSHConfig() ([]SSHHost, error) {
 	var hosts []SSHHost
 
-	// Get the SSH config path
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return hosts, err
 	}
-
 	configPath := filepath.Join(homeDir, ".ssh", "config")
 
-	// Check if config file exists
+	// Check if config file exists; return empty if not (config is optional)
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		return hosts, nil // Return empty slice, not an error
+		return hosts, nil
 	}
-
 	file, err := os.Open(configPath)
 	if err != nil {
 		return hosts, err
@@ -52,19 +56,17 @@ func ParseSSHConfig() ([]SSHHost, error) {
 			continue
 		}
 
-		// Split the line into key and value
 		parts := strings.Fields(line)
 		if len(parts) < 2 {
 			continue
 		}
-
 		key := strings.ToLower(parts[0])
 		value := strings.Join(parts[1:], " ")
 
 		switch key {
 		case "host":
 			if inHostSection && currentHost.Name != "" {
-				currentHost.Source = "config"
+				currentHost.Source = SourceConfig
 				hosts = append(hosts, currentHost)
 			}
 
@@ -90,7 +92,6 @@ func ParseSSHConfig() ([]SSHHost, error) {
 				aliases = hostNames[1:]
 			}
 
-			// Start new host section with the primary hostname and aliases
 			currentHost = SSHHost{Name: primaryHostName, Aliases: aliases}
 			inHostSection = true
 
@@ -111,7 +112,7 @@ func ParseSSHConfig() ([]SSHHost, error) {
 
 	// Add the last host if it exists
 	if inHostSection && currentHost.Name != "" {
-		currentHost.Source = "config"
+		currentHost.Source = SourceConfig
 		hosts = append(hosts, currentHost)
 	}
 

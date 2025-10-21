@@ -12,17 +12,15 @@ import (
 func ParseKnownHosts() ([]SSHHost, error) {
 	var hosts []SSHHost
 
-	// Get the SSH known_hosts path
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return hosts, err
 	}
-
 	knownHostsPath := filepath.Join(homeDir, ".ssh", "known_hosts")
 
-	// Check if known_hosts file exists
+	// Check if known_hosts file exists; return empty if not (known_hosts is optional)
 	if _, err := os.Stat(knownHostsPath); os.IsNotExist(err) {
-		return hosts, nil // Return empty slice, not an error
+		return hosts, nil
 	}
 
 	file, err := os.Open(knownHostsPath)
@@ -32,7 +30,7 @@ func ParseKnownHosts() ([]SSHHost, error) {
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	hostMap := make(map[string]bool) // To avoid duplicates
+	hostMap := make(map[string]bool)
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -73,7 +71,6 @@ func ParseKnownHosts() ([]SSHHost, error) {
 			// Extract hostname and port if present
 			host, port := parseHostPort(hostName)
 
-			// Skip if we've already seen this host
 			if hostMap[host] {
 				continue
 			}
@@ -89,7 +86,7 @@ func ParseKnownHosts() ([]SSHHost, error) {
 				Name:     host,
 				HostName: host,
 				Port:     port,
-				Source:   "known_hosts",
+				Source:   SourceKnownHosts,
 			}
 
 			hosts = append(hosts, sshHost)
@@ -102,7 +99,6 @@ func ParseKnownHosts() ([]SSHHost, error) {
 // parseHostPort extracts hostname and port from a known_hosts entry
 // Handles formats like: hostname, [hostname]:port, hostname:port
 func parseHostPort(hostEntry string) (string, string) {
-	// Handle bracketed format [hostname]:port
 	if strings.HasPrefix(hostEntry, "[") && strings.Contains(hostEntry, "]:") {
 		endBracket := strings.Index(hostEntry, "]:")
 		if endBracket > 1 {
@@ -112,7 +108,6 @@ func parseHostPort(hostEntry string) (string, string) {
 		}
 	}
 
-	// Handle regular hostname:port format (but be careful about IPv6)
 	if strings.Contains(hostEntry, ":") && !strings.Contains(hostEntry, "::") {
 		parts := strings.Split(hostEntry, ":")
 		if len(parts) == 2 {
@@ -120,6 +115,5 @@ func parseHostPort(hostEntry string) (string, string) {
 		}
 	}
 
-	// Just a hostname without port
 	return hostEntry, ""
 }

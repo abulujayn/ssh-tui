@@ -5,6 +5,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
+	"ssh-tui/internal/parser"
 	"ssh-tui/internal/tui/helpers"
 	"ssh-tui/internal/tui/labels"
 	"ssh-tui/internal/tui/styles"
@@ -14,19 +15,16 @@ import (
 func (m *OptionsEntryModel) View() string {
 	var b strings.Builder
 
-	// Title
 	b.WriteString(styles.TitleStyle.Render("SSH Options & Arguments") + "\n\n")
 
 	// Selected host info in table format
 	b.WriteString(m.renderHostInfoTable())
-	if m.host.Source == "config" {
+	if m.host.Source == parser.SourceConfig {
 		b.WriteString("\n\n")
 	}
 
-	// Options label
 	b.WriteString(styles.TitleStyle.Render("Options:") + "\n")
 
-	// Input field
 	inputStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("86")).
@@ -39,18 +37,14 @@ func (m *OptionsEntryModel) View() string {
 
 	b.WriteString("\n")
 
-	// Examples label (muted description under the input)
 	b.WriteString(styles.InstructionStyle.Render(labels.ExamplesText) + "\n\n")
 
-	// Command Preview Section
 	b.WriteString(styles.TitleStyle.Render("Command Preview:") + "\n")
 
-	// Show the current command that would be executed as plain text
+	// Show the current command that would be executed
 	currentCommand := m.GetCommand()
-	// Render as plain default text (no styling)
 	b.WriteString(currentCommand + "\n\n")
 
-	// Main instructions at the bottom
 	b.WriteString(styles.InstructionStyle.Render("Use Enter to execute, Esc to go back") + "\n\n")
 
 	return b.String()
@@ -59,11 +53,10 @@ func (m *OptionsEntryModel) View() string {
 // renderHostInfoTable renders the selected host information in a table format
 func (m *OptionsEntryModel) renderHostInfoTable() string {
 	// Only show table for hosts from sshconfig
-	if m.host.Source != "config" {
+	if m.host.Source != parser.SourceConfig {
 		return ""
 	}
 
-	// Table styles
 	tableStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("240")).
@@ -84,33 +77,31 @@ func (m *OptionsEntryModel) renderHostInfoTable() string {
 
 	var tableContent strings.Builder
 
-	// Table header
 	tableContent.WriteString(headerStyle.Render("Host configuration"))
 	tableContent.WriteString("\n\n")
 
 	// Host name
-	tableContent.WriteString(labelStyle.Render("Host:"))
-	tableContent.WriteString("  ")
-	tableContent.WriteString(valueStyle.Render(m.host.HostName))
-	tableContent.WriteString("\n")
+	m.addTableRow(&tableContent, labelStyle, valueStyle, "Host:", m.host.HostName)
 
-	// Port (always show)
+	// Port
 	port := m.host.Port
 	if port == "" {
-		port = "22" // Default SSH port
+		port = parser.DefaultSSHPort // Default SSH port
 	}
-	tableContent.WriteString(labelStyle.Render("Port:"))
-	tableContent.WriteString("  ")
-	tableContent.WriteString(valueStyle.Render(port))
-	tableContent.WriteString("\n")
+	m.addTableRow(&tableContent, labelStyle, valueStyle, "Port:", port)
 
 	// User
 	if m.host.User != "" {
-		tableContent.WriteString(labelStyle.Render("User:"))
-		tableContent.WriteString("  ")
-		tableContent.WriteString(valueStyle.Render(m.host.User))
-		tableContent.WriteString("\n")
+		m.addTableRow(&tableContent, labelStyle, valueStyle, "User:", m.host.User)
 	}
 
 	return tableStyle.Render(tableContent.String())
+}
+
+// addTableRow adds a labeled row to the table content
+func (m *OptionsEntryModel) addTableRow(content *strings.Builder, labelStyle, valueStyle lipgloss.Style, label, value string) {
+	content.WriteString(labelStyle.Render(label))
+	content.WriteString("  ")
+	content.WriteString(valueStyle.Render(value))
+	content.WriteString("\n")
 }

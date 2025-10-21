@@ -7,21 +7,19 @@ import (
 )
 
 // BuildCustomHost builds a parser.SSHHost from raw user input (e.g. user@host)
-// Returns a value (not pointer) so callers can take its address safely.
 func BuildCustomHost(raw string) parser.SSHHost {
 	user, host := parser.ParseUserHost(raw)
 	return parser.SSHHost{
 		Name:     raw,
 		HostName: host,
 		User:     user,
-		Port:     "22",
-		Source:   "custom",
+		Port:     parser.DefaultSSHPort,
+		Source:   parser.SourceCustom,
 		Aliases:  nil,
 	}
 }
 
-// ScrollRange calculates start and end indices for a list given a desired max visible count.
-// Ensures the cursor is centered when possible and the returned window is valid for the list length.
+// ScrollRange calculates start and end indices for a list given a desired max visible count
 func ScrollRange(listLen, cursor, maxVisible int) (start, end int) {
 	if maxVisible <= 0 {
 		return 0, listLen
@@ -64,8 +62,6 @@ func DeleteWordBackwards(s string, cursor int) (string, int) {
 }
 
 // RenderInputWithCursor returns a string where the cursor position is rendered
-// using a simple block style. It preserves the input as-is when cursor is at end.
-// width parameter is kept for future uses; currently unused.
 func RenderInputWithCursor(s string, cursor int, width int) string {
 	// cursorStyle: render the cursor with the same color as the input border so it matches visually
 	cursorStyle := lipgloss.NewStyle().Background(lipgloss.Color("86")).Foreground(lipgloss.Color("0")).Bold(true)
@@ -78,7 +74,6 @@ func RenderInputWithCursor(s string, cursor int, width int) string {
 		cursor = len(s)
 	}
 
-	// Build parts: left, cursorGlyph, right
 	left := ""
 	right := ""
 

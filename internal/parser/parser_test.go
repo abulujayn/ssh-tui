@@ -37,10 +37,15 @@ func TestIsValidHost(t *testing.T) {
 		{"user@2001:db8::1", true},
 		{"example.com", true},
 		{"User@Example.COM", true},
+		{"sub.example.com", true},
+		{"host-name.com", true},
+		{"a.b.c.example.org", true},
 		{"localhost", false},
 		{"", false},
 		{"user@", false},
 		{"invalid_domain", false},
+		{"-invalid.com", false},
+		{"invalid-.com", false},
 	}
 
 	for _, c := range cases {
@@ -61,6 +66,9 @@ func TestParseUserHost(t *testing.T) {
 		{"host", "", "host"},
 		{" user@host ", "user", "host"},
 		{"user@", "user", ""},
+		{"@host", "", "host"},
+		{"user@host:port", "user", "host:port"},
+		{"", "", ""},
 	}
 
 	for _, c := range cases {

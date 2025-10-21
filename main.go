@@ -30,19 +30,14 @@ func main() {
 		}
 	}
 
-	// If CLI args were provided, treat them as a direct ssh invocation and execute immediately.
-	// This allows users to alias ssh to ssh-tui and keep compatibility.
+	// If CLI args were provided, treat them as a direct ssh invocation and execute immediately
 	if len(os.Args) > 1 {
-		// Build command: prepend "ssh" to provided args
-		// Note: args may include options and target host (e.g., -p 2222 user@host)
 		cmd := "ssh " + strings.Join(os.Args[1:], " ")
 
-		// Execute the SSH command immediately (no validation; caller provided args)
 		_ = ssh.ExecuteSSHCommand(cmd)
 		return
 	}
 
-	// Discover hosts
 	hosts, err := parser.DiscoverHosts()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error discovering SSH hosts: %v\n", err)
@@ -54,7 +49,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Run the TUI flow
 	if err := runTUIFlow(hosts); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
@@ -87,7 +81,6 @@ func showNoHostsMessage() {
 
 // runTUIFlow runs the complete TUI flow
 func runTUIFlow(hosts []parser.SSHHost) error {
-	// Step 1: Host Selection
 	hostSelector := hostselector.NewHostSelectorModel(hosts)
 
 	p := tea.NewProgram(hostSelector, tea.WithAltScreen())
@@ -103,25 +96,20 @@ func runTUIFlow(hosts []parser.SSHHost) error {
 
 	selectedHost := hostModel.GetSelectedHost()
 	if selectedHost == nil || !hostModel.IsSelected() {
-		// User cancelled or no selection made
 		return nil
 	}
 
-	// If the host selector requested to open options, continue to options entry
 	if hostModel.OpenOptionsRequested() {
 		return runOptionsFlow(selectedHost, hosts)
 	}
 
-	// If we reach here, host selector chose to execute immediately without options
 	// Build command using default/empty options
 	command := ssh.BuildSSHCommand(selectedHost, "")
 
-	// Validate the command before execution
 	if err := ssh.ValidateSSHCommand(command); err != nil {
 		return fmt.Errorf("invalid SSH command: %w", err)
 	}
 
-	// Execute the SSH command
 	if err := ssh.ExecuteSSHCommand(command); err != nil {
 		return fmt.Errorf("SSH execution failed: %w", err)
 	}
@@ -131,7 +119,6 @@ func runTUIFlow(hosts []parser.SSHHost) error {
 
 // runOptionsFlow runs the options entry and subsequent steps (for back navigation)
 func runOptionsFlow(selectedHost *parser.SSHHost, hosts []parser.SSHHost) error {
-	// Step 2: Options Entry
 	optionsEntry := optionsentry.NewOptionsEntryModel(selectedHost)
 
 	p := tea.NewProgram(optionsEntry, tea.WithAltScreen())
@@ -146,24 +133,19 @@ func runOptionsFlow(selectedHost *parser.SSHHost, hosts []parser.SSHHost) error 
 	}
 
 	if optionsModel.IsCancelled() {
-		// User went back to host selection
 		return runTUIFlow(hosts)
 	}
 
 	if !optionsModel.IsConfirmed() {
-		// User cancelled
 		return nil
 	}
 
-	// Step 3: Execute SSH Command directly
 	command := optionsModel.GetCommand()
 
-	// Validate the command before execution
 	if err := ssh.ValidateSSHCommand(command); err != nil {
 		return fmt.Errorf("invalid SSH command: %w", err)
 	}
 
-	// Execute the SSH command
 	if err := ssh.ExecuteSSHCommand(command); err != nil {
 		return fmt.Errorf("SSH execution failed: %w", err)
 	}

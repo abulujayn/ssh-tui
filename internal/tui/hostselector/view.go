@@ -16,10 +16,8 @@ import (
 func (m *HostSelectorModel) View() string {
 	var b strings.Builder
 
-	// Title
 	b.WriteString(styles.TitleStyle.Render("Host selection") + "\n\n")
 
-	// Search bar
 	renderedSearch := helpers.RenderInputWithCursor(m.searchInput, len(m.searchInput), 40)
 	b.WriteString(styles.SearchStyle.Render("Search: "+renderedSearch) + "\n\n")
 
@@ -78,7 +76,6 @@ func (m *HostSelectorModel) View() string {
 		b.WriteString(styles.InstructionStyle.Render(scrollInfo))
 	}
 
-	// Bottom instructions
 	b.WriteString("\n\n")
 	b.WriteString(styles.InstructionStyle.Render(labels.InstructionNav))
 

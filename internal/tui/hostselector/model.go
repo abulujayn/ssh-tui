@@ -14,10 +14,9 @@ type HostSelectorModel struct {
 	searchInput   string
 	selected      bool
 	selectedHost  *parser.SSHHost
-	// If true, user requested to open the options screen after selection.
-	openOptions bool
-	width       int
-	height      int
+	openOptions   bool
+	width         int
+	height        int
 }
 
 // NewHostSelectorModel creates a new host selector model
