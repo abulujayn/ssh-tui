@@ -18,7 +18,10 @@ func (m *OptionsEntryModel) View() string {
 	b.WriteString(styles.TitleStyle.Render("SSH Options & Arguments") + "\n\n")
 
 	// Selected host info in table format
-	b.WriteString(m.renderHostInfoTable() + "\n\n")
+	b.WriteString(m.renderHostInfoTable())
+	if m.host.Source == "config" {
+		b.WriteString("\n\n")
+	}
 
 	// Options label
 	b.WriteString(styles.TitleStyle.Render("Options:") + "\n")
@@ -55,6 +58,11 @@ func (m *OptionsEntryModel) View() string {
 
 // renderHostInfoTable renders the selected host information in a table format
 func (m *OptionsEntryModel) renderHostInfoTable() string {
+	// Only show table for hosts from sshconfig
+	if m.host.Source != "config" {
+		return ""
+	}
+
 	// Table styles
 	tableStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
@@ -77,7 +85,7 @@ func (m *OptionsEntryModel) renderHostInfoTable() string {
 	var tableContent strings.Builder
 
 	// Table header
-	tableContent.WriteString(headerStyle.Render("Current Configuration"))
+	tableContent.WriteString(headerStyle.Render("Host configuration"))
 	tableContent.WriteString("\n\n")
 
 	// Host name
