@@ -144,11 +144,12 @@ func FormatHostDisplay(host SSHHost) string {
 		details = append(details, fmt.Sprintf("host: %s", host.HostName))
 	}
 
-	if host.User != "" {
-		details = append(details, fmt.Sprintf("user: %s", host.User))
-	}
 	if host.Port != "" && host.Port != "22" {
 		details = append(details, fmt.Sprintf("port: %s", host.Port))
+	}
+
+	if host.User != "" {
+		details = append(details, fmt.Sprintf("user: %s", host.User))
 	}
 
 	if len(details) > 0 {
