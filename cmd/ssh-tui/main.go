@@ -16,7 +16,7 @@ import (
 )
 
 // Version is the application version string. Bump this when releasing.
-const Version = "1.0.0-alpha"
+const Version = "1.0.0-beta"
 
 func main() {
 

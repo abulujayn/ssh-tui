@@ -7,6 +7,7 @@ import (
 )
 
 var domainRegex = regexp.MustCompile(`^(?i)[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*\.[a-z]{2,}$`)
+var hostnameRegex = regexp.MustCompile(`^(?i)[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
 
 // IsValidSSHOption returns true if the SSH option string is safe (no shell metacharacters)
 func IsValidSSHOption(option string) bool {
@@ -36,7 +37,11 @@ func IsValidHost(input string) bool {
 		return true
 	}
 	// Check if it's a valid domain name (RFC 1035, simplified)
-	return domainRegex.MatchString(hostPart)
+	if domainRegex.MatchString(hostPart) {
+		return true
+	}
+	// Check if it's a valid simple hostname (no dots, can be defined in ~/.ssh/config or /etc/hosts)
+	return hostnameRegex.MatchString(hostPart)
 }
 
 // ParseUserHost splits a string like user@host into user and host parts

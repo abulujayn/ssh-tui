@@ -41,7 +41,7 @@ func TestIsValidHost(t *testing.T) {
 		{"sub.example.com", true},
 		{"host-name.com", true},
 		{"a.b.c.example.org", true},
-		{"localhost", false},
+		{"localhost", true},
 		{"", false},
 		{"user@", false},
 		{"invalid_domain", false},

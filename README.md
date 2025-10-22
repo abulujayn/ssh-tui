@@ -2,7 +2,7 @@
 
 A fully interactive Terminal User Interface (TUI) for selecting and connecting to SSH hosts, built with Go and the Bubbletea framework.
 
-**Latest Version:** 1.0.0-alpha
+**Latest Version:** 1.0.0-beta
 
 ## Features
 
