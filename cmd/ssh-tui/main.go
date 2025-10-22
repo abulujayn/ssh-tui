@@ -80,12 +80,12 @@ func showNoHostsMessage() {
 	fmt.Println(messageStyle.Render("    Port 22"))
 }
 
-// runTUIFlow runs the complete TUI flow
+// runTUIFlow runs the complete TUI flow for host selection and connection
 func runTUIFlow(hosts []types.SSHHost) error {
-	hostSelector := hostselector.NewHostSelectorModel(hosts)
+	hostSelectorModel := hostselector.NewHostSelectorModel(hosts)
 
-	p := tea.NewProgram(hostSelector, tea.WithAltScreen())
-	finalModel, err := p.Run()
+	program := tea.NewProgram(hostSelectorModel, tea.WithAltScreen())
+	finalModel, err := program.Run()
 	if err != nil {
 		return fmt.Errorf("failed to run host selector: %w", err)
 	}
@@ -120,10 +120,10 @@ func runTUIFlow(hosts []types.SSHHost) error {
 
 // runOptionsFlow runs the options entry and subsequent steps (for back navigation)
 func runOptionsFlow(selectedHost *types.SSHHost, hosts []types.SSHHost) error {
-	optionsEntry := optionsentry.NewOptionsEntryModel(selectedHost)
+	optionsEntryModel := optionsentry.NewOptionsEntryModel(selectedHost)
 
-	p := tea.NewProgram(optionsEntry, tea.WithAltScreen())
-	finalModel, err := p.Run()
+	program := tea.NewProgram(optionsEntryModel, tea.WithAltScreen())
+	finalModel, err := program.Run()
 	if err != nil {
 		return fmt.Errorf("failed to run options entry: %w", err)
 	}

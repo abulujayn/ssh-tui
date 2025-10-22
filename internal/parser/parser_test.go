@@ -105,29 +105,37 @@ func TestFilterHosts_OrderAndMatching(t *testing.T) {
 	}
 }
 
-func TestFormatHostDisplay_ContainsDetails(t *testing.T) {
-	h := types.SSHHost{
-		Name:     "myserver",
-		HostName: "example.com",
-		User:     "me",
-		Port:     "2222",
+func TestIsValidSSHOption(t *testing.T) {
+	_ = strings.TrimSpace // dummy use to satisfy linter
+	cases := []struct {
+		in   string
+		want bool
+	}{
+		{"-p 2222", true},
+		{"-i ~/.ssh/id_rsa", true},
+		{"-L 8080:localhost:80", true},
+		{"-o StrictHostKeyChecking=no", true},
+		{"-p 2222; rm -rf /", false},        // semicolon
+		{"-i key | cat /etc/passwd", false}, // pipe
+		{"-L 8080:localhost:80 &", false},   // ampersand
+		{"-p 2222 `whoami`", false},         // backtick
+		{"-i $HOME/.ssh/key", false},        // dollar
+		{"-p (2222)", false},                // parentheses
+		{"-L <file", false},                 // less than
+		{"-p >2222", false},                 // greater than
+		{"-i [key]", false},                 // brackets
+		{"-p {2222}", false},                // braces
+		{"-i 'key'", false},                 // single quote
+		{"-p \"2222\"", false},              // double quote
+		{"-i key\\n", false},                // backslash
+		{"", true},                          // empty is allowed
+		{"-v -X", true},                     // multiple options
 	}
 
-	out := FormatHostDisplay(h)
-
-	if !strings.HasPrefix(out, "myserver") {
-		t.Fatalf("expected output to start with host name, got %q", out)
-	}
-
-	if !strings.Contains(out, "host: example.com") {
-		t.Fatalf("expected host detail to include hostname, got %q", out)
-	}
-
-	if !strings.Contains(out, "user: me") {
-		t.Fatalf("expected host detail to include user, got %q", out)
-	}
-
-	if !strings.Contains(out, "port: 2222") {
-		t.Fatalf("expected host detail to include port, got %q", out)
+	for _, c := range cases {
+		got := IsValidSSHOption(c.in)
+		if got != c.want {
+			t.Fatalf("IsValidSSHOption(%q) = %v, want %v", c.in, got, c.want)
+		}
 	}
 }

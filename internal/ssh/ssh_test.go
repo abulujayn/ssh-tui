@@ -15,14 +15,24 @@ func TestValidateSSHCommand(t *testing.T) {
 		{"", true},
 		{"notssh host", true},
 		{"ssh", true},
-		{"ssh -p 2222 -i key", false}, // current implementation treats final token as host (even if used as option arg)
-		{"ssh -p -C", true},           // last tokens are all option-like, no non-option host
-		{"ssh user@host", false},
-		{"ssh -p 2222 user@host", false},
-		{"ssh   user@host", false},      // multiple spaces
-		{"ssh\tuser@host", false},       // tabs
-		{"ssh host with spaces", false}, // host with spaces (though invalid, but validation allows)
-		{"ssh -o option=value host", false},
+		{"ssh -p 2222 -i ~/.ssh/key example.com", false}, // valid host
+		{"ssh -p -C", true}, // last tokens are all option-like, no non-option host
+		{"ssh user@example.com", false},
+		{"ssh -p 2222 user@example.com", false},
+		{"ssh   user@example.com", false}, // multiple spaces
+		{"ssh\tuser@example.com", false},  // tabs
+		{"ssh example.com", false},        // valid host
+		{"ssh -o option=value example.com", false},
+		{"ssh invalid_host", true},       // invalid host
+		{"ssh user@invalid..host", true}, // invalid domain
+		{"ssh -p 0 host", true},          // invalid port 0
+		{"ssh -p 99999 host", true},      // invalid port > 65535
+		{"ssh -p abc host", true},        // non-numeric port
+		{"ssh 192.168.1.1", false},       // valid IP
+		{"ssh user@192.168.1.1", false},  // valid user@IP
+		{"ssh example.com", false},       // valid domain
+		{"ssh sub.example.com", false},   // valid subdomain
+		{"ssh -p 22 valid.host", false},  // valid with port
 	}
 
 	for _, c := range cases {

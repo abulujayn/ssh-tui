@@ -5,8 +5,11 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"strings"
 	"syscall"
+
+	"ssh-tui/internal/parser"
 )
 
 // ExecuteSSHCommand executes the SSH command with proper handling for different platforms
@@ -67,7 +70,7 @@ func executeSSHUnix(sshPath string, args []string) error {
 	return fmt.Errorf("failed to execute SSH command: %w", err)
 }
 
-// ValidateSSHCommand performs basic validation of the SSH command
+// ValidateSSHCommand performs comprehensive validation of the SSH command
 func ValidateSSHCommand(command string) error {
 	if command == "" {
 		return fmt.Errorf("command is empty")
@@ -86,17 +89,33 @@ func ValidateSSHCommand(command string) error {
 		return fmt.Errorf("SSH command missing target host")
 	}
 
-	// Basic check for host argument (last non-option argument)
-	hostFound := false
+	// Find the host argument (last non-option argument)
+	var host string
 	for i := len(parts) - 1; i >= 1; i-- {
 		if !strings.HasPrefix(parts[i], "-") {
-			hostFound = true
+			host = parts[i]
 			break
 		}
 	}
 
-	if !hostFound {
+	if host == "" {
 		return fmt.Errorf("no target host specified in SSH command")
+	}
+
+	// Validate the host
+	if !parser.IsValidHost(host) {
+		return fmt.Errorf("invalid host: %s", host)
+	}
+
+	// Check for port option if present
+	for i := 1; i < len(parts)-1; i++ {
+		if parts[i] == "-p" && i+1 < len(parts) {
+			portStr := parts[i+1]
+			port, err := strconv.Atoi(portStr)
+			if err != nil || port < 1 || port > 65535 {
+				return fmt.Errorf("invalid port: %s", portStr)
+			}
+		}
 	}
 
 	return nil
