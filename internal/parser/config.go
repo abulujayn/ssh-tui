@@ -81,7 +81,7 @@ func ParseSSHConfig() ([]types.SSHHost, error) {
 			inHostSection = true
 
 		case "hostname":
-			if inHostSection {
+			if inHostSection && IsValidHost(value) {
 				currentHost.HostName = value
 			}
 		case "user":

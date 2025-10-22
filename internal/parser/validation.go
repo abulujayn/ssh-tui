@@ -8,6 +8,13 @@ import (
 
 var domainRegex = regexp.MustCompile(`^(?i)[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*\.[a-z]{2,}$`)
 
+// IsValidSSHOption returns true if the SSH option string is safe (no shell metacharacters)
+func IsValidSSHOption(option string) bool {
+	// Disallow common shell metacharacters that could lead to command injection
+	dangerousChars := ";|&`$()<>[]{}\"'\\"
+	return !strings.ContainsAny(option, dangerousChars)
+}
+
 // IsValidHost returns true if the input is a valid IP address or domain name
 func IsValidHost(input string) bool {
 	input = strings.TrimSpace(input)

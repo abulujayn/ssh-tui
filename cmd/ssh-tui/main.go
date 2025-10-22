@@ -141,6 +141,11 @@ func runOptionsFlow(selectedHost *types.SSHHost, hosts []types.SSHHost) error {
 		return nil
 	}
 
+	options := optionsModel.GetOptions()
+	if !parser.IsValidSSHOption(options) {
+		return fmt.Errorf("invalid SSH options: contains potentially dangerous characters")
+	}
+
 	command := optionsModel.GetCommand()
 
 	if err := ssh.ValidateSSHCommand(command); err != nil {

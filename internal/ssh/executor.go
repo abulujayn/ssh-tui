@@ -24,7 +24,9 @@ func ExecuteSSHCommand(command string) error {
 	args := parts[1:]
 
 	// Print only the full command before executing so the user can see exactly what's run
-	fmt.Println("\x1b[1;36m" + strings.Join(parts, " ") + "\x1b[0m")
+	if command != "ssh" {
+		fmt.Println("\x1b[1;36m" + strings.Join(parts, " ") + "\x1b[0m")
+	}
 
 	// Execute based on platform
 	switch runtime.GOOS {
