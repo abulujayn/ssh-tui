@@ -1,4 +1,5 @@
-ssh-tui.exe
+ssh-tui.*
 ssh-tui
+!ssh-tui/
 
 .vscodecounter/

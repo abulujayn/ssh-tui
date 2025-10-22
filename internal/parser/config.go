@@ -5,28 +5,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-)
 
-// SSHHost represents a parsed SSH host with its configuration
-type SSHHost struct {
-	Name     string
-	HostName string
-	User     string
-	Port     string
-	Source   string
-	Aliases  []string
-}
-
-const (
-	SourceConfig     = "config"
-	SourceKnownHosts = "known_hosts"
-	SourceCustom     = "custom"
-	DefaultSSHPort   = "22"
+	"ssh-tui/internal/types"
 )
 
 // ParseSSHConfig parses the SSH config file and returns a list of hosts
-func ParseSSHConfig() ([]SSHHost, error) {
-	var hosts []SSHHost
+func ParseSSHConfig() ([]types.SSHHost, error) {
+	var hosts []types.SSHHost
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -45,7 +30,7 @@ func ParseSSHConfig() ([]SSHHost, error) {
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	var currentHost SSHHost
+	var currentHost types.SSHHost
 	var inHostSection bool
 
 	for scanner.Scan() {
@@ -66,7 +51,7 @@ func ParseSSHConfig() ([]SSHHost, error) {
 		switch key {
 		case "host":
 			if inHostSection && currentHost.Name != "" {
-				currentHost.Source = SourceConfig
+				currentHost.Source = types.SourceConfig
 				hosts = append(hosts, currentHost)
 			}
 
@@ -92,7 +77,7 @@ func ParseSSHConfig() ([]SSHHost, error) {
 				aliases = hostNames[1:]
 			}
 
-			currentHost = SSHHost{Name: primaryHostName, Aliases: aliases}
+			currentHost = types.SSHHost{Name: primaryHostName, Aliases: aliases}
 			inHostSection = true
 
 		case "hostname":
@@ -112,7 +97,7 @@ func ParseSSHConfig() ([]SSHHost, error) {
 
 	// Add the last host if it exists
 	if inHostSection && currentHost.Name != "" {
-		currentHost.Source = SourceConfig
+		currentHost.Source = types.SourceConfig
 		hosts = append(hosts, currentHost)
 	}
 

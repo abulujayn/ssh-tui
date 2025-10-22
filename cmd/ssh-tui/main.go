@@ -8,6 +8,7 @@ import (
 	"ssh-tui/internal/ssh"
 	"ssh-tui/internal/tui/hostselector"
 	"ssh-tui/internal/tui/optionsentry"
+	"ssh-tui/internal/types"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -80,7 +81,7 @@ func showNoHostsMessage() {
 }
 
 // runTUIFlow runs the complete TUI flow
-func runTUIFlow(hosts []parser.SSHHost) error {
+func runTUIFlow(hosts []types.SSHHost) error {
 	hostSelector := hostselector.NewHostSelectorModel(hosts)
 
 	p := tea.NewProgram(hostSelector, tea.WithAltScreen())
@@ -118,7 +119,7 @@ func runTUIFlow(hosts []parser.SSHHost) error {
 }
 
 // runOptionsFlow runs the options entry and subsequent steps (for back navigation)
-func runOptionsFlow(selectedHost *parser.SSHHost, hosts []parser.SSHHost) error {
+func runOptionsFlow(selectedHost *types.SSHHost, hosts []types.SSHHost) error {
 	optionsEntry := optionsentry.NewOptionsEntryModel(selectedHost)
 
 	p := tea.NewProgram(optionsEntry, tea.WithAltScreen())

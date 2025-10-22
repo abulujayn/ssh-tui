@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"ssh-tui/internal/parser"
+	"ssh-tui/internal/types"
 )
 
 func TestValidateSSHCommand(t *testing.T) {
@@ -35,21 +35,21 @@ func TestValidateSSHCommand(t *testing.T) {
 
 func TestBuildSSHCommand_AdditionalCases(t *testing.T) {
 	// config source with options that include spaces
-	cfgHost := &parser.SSHHost{Name: "cfg", HostName: "cfg.example", Source: "config"}
+	cfgHost := &types.SSHHost{Name: "cfg", HostName: "cfg.example", Source: types.SourceConfig}
 	cmd := BuildSSHCommand(cfgHost, "-L 8080:localhost:80 -i ~/.ssh/id_rsa")
 	if cmd != "ssh cfg -L 8080:localhost:80 -i ~/.ssh/id_rsa" {
 		t.Fatalf("unexpected command: %q", cmd)
 	}
 
 	// known_hosts-like with no user, HostName == Name, default port
-	known := &parser.SSHHost{Name: "host.local", HostName: "host.local", Port: parser.DefaultSSHPort, Source: parser.SourceKnownHosts}
+	known := &types.SSHHost{Name: "host.local", HostName: "host.local", Port: types.DefaultSSHPort, Source: types.SourceKnownHosts}
 	cmd = BuildSSHCommand(known, "")
 	if cmd != "ssh host.local" {
 		t.Fatalf("unexpected command for known host: %q", cmd)
 	}
 
 	// known_hosts-like with user and non-default port
-	known2 := &parser.SSHHost{Name: "srv", HostName: "srv.example", User: "admin", Port: "2200", Source: parser.SourceKnownHosts}
+	known2 := &types.SSHHost{Name: "srv", HostName: "srv.example", User: "admin", Port: "2200", Source: types.SourceKnownHosts}
 	cmd = BuildSSHCommand(known2, "-v")
 	if cmd != "ssh -p 2200 admin@srv.example -v" {
 		t.Fatalf("unexpected command for known2: %q", cmd)
@@ -71,5 +71,89 @@ func TestCheckSSHAvailable_Failure(t *testing.T) {
 
 	if err := CheckSSHAvailable(); err == nil {
 		t.Fatalf("expected CheckSSHAvailable to fail when PATH is empty")
+	}
+}
+
+func TestBuildSSHCommand_ConfigHost(t *testing.T) {
+	// Test host from SSH config
+	configHost := &types.SSHHost{
+		Name:     "myserver",
+		HostName: "example.com",
+		User:     "myuser",
+		Port:     "2222",
+		Source:   "config",
+	}
+
+	// Test without additional options
+	command := BuildSSHCommand(configHost, "")
+	expected := "ssh myserver"
+	if command != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, command)
+	}
+
+	// Test with additional options
+	command = BuildSSHCommand(configHost, "-L 8080:localhost:80")
+	expected = "ssh myserver -L 8080:localhost:80"
+	if command != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, command)
+	}
+}
+
+func TestBuildSSHCommand_KnownHost(t *testing.T) {
+	// Test host from known_hosts (should expand options)
+	knownHost := &types.SSHHost{
+		Name:     "server.example.com",
+		HostName: "server.example.com",
+		User:     "admin",
+		Port:     "2222",
+		Source:   types.SourceKnownHosts,
+	}
+
+	// Test without additional options
+	command := BuildSSHCommand(knownHost, "")
+	expected := "ssh -p 2222 admin@server.example.com"
+	if command != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, command)
+	}
+
+	// Test with additional options
+	command = BuildSSHCommand(knownHost, "-i ~/.ssh/key")
+	expected = "ssh -p 2222 admin@server.example.com -i ~/.ssh/key"
+	if command != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, command)
+	}
+}
+
+func TestBuildSSHCommand_ConfigHostWithDefaultPort(t *testing.T) {
+	// Test config host with default port 22 (should still use host name only)
+	configHost := &types.SSHHost{
+		Name:     "webserver",
+		HostName: "web.company.com",
+		User:     "deploy",
+		Port:     "22", // Default port
+		Source:   "config",
+	}
+
+	command := BuildSSHCommand(configHost, "")
+	expected := "ssh webserver"
+	if command != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, command)
+	}
+}
+
+func TestBuildSSHCommand_KnownHostWithDefaultPort(t *testing.T) {
+	// Test known_hosts with default port (should not include -p 22)
+	knownHost := &types.SSHHost{
+		Name:     "server.example.com",
+		HostName: "server.example.com",
+		User:     "admin",
+		Port:     types.DefaultSSHPort, // Default port
+		Source:   types.SourceKnownHosts,
+	}
+
+	command := BuildSSHCommand(knownHost, "")
+	expected := "ssh admin@server.example.com"
+	if command != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, command)
 	}
 }

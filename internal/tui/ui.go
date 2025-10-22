@@ -1,6 +1,14 @@
-package styles
+package ui
 
 import "github.com/charmbracelet/lipgloss"
+
+// Shared UI text constants to avoid duplication across views.
+const (
+	InstructionNav = "Use \u2191/\u2193 to navigate, Tab for options, Enter to connect"
+	TabForOptions  = "Tab for options"
+	ExamplesText   = "Examples: -L 8080:localhost:80 -i ~/.ssh/id_rsa -p 2222 -X"
+	SearchLabel    = "Search: "
+)
 
 // Shared styles used across TUI models. Exported so other files can reference them.
 var (

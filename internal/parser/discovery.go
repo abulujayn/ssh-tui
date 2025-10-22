@@ -3,6 +3,8 @@ package parser
 import (
 	"fmt"
 	"strings"
+
+	"ssh-tui/internal/types"
 )
 
 // matchesTerm checks if the search term matches any of the given strings in various ways
@@ -25,8 +27,8 @@ func matchesTerm(searchTerm string, candidates []string) int {
 }
 
 // DiscoverHosts discovers all SSH hosts from both config and known_hosts files
-func DiscoverHosts() ([]SSHHost, error) {
-	var allHosts []SSHHost
+func DiscoverHosts() ([]types.SSHHost, error) {
+	var allHosts []types.SSHHost
 
 	configHosts, err := ParseSSHConfig()
 	if err != nil {
@@ -63,12 +65,12 @@ func DiscoverHosts() ([]SSHHost, error) {
 }
 
 // FilterHosts filters hosts by a search term
-func FilterHosts(hosts []SSHHost, searchTerm string) []SSHHost {
+func FilterHosts(hosts []types.SSHHost, searchTerm string) []types.SSHHost {
 	if searchTerm == "" {
 		return hosts
 	}
 
-	var filtered []SSHHost
+	var filtered []types.SSHHost
 
 	// Prioritization strategy with aliases:
 	// 1) Hosts where an alias exactly matches the search term (highest priority)
@@ -78,11 +80,11 @@ func FilterHosts(hosts []SSHHost, searchTerm string) []SSHHost {
 	// 5) Alias substring matches
 	// Within each bucket, preserve input order.
 
-	var exactAliasMatches []SSHHost
-	var primaryPrefix []SSHHost
-	var primaryContains []SSHHost
-	var aliasPrefix []SSHHost
-	var aliasContains []SSHHost
+	var exactAliasMatches []types.SSHHost
+	var primaryPrefix []types.SSHHost
+	var primaryContains []types.SSHHost
+	var aliasPrefix []types.SSHHost
+	var aliasContains []types.SSHHost
 
 	for _, host := range hosts {
 		// Check exact alias match first
@@ -123,7 +125,7 @@ func FilterHosts(hosts []SSHHost, searchTerm string) []SSHHost {
 }
 
 // FormatHostDisplay formats a host for display in the TUI
-func FormatHostDisplay(host SSHHost) string {
+func FormatHostDisplay(host types.SSHHost) string {
 	var lines []string
 
 	lines = append(lines, host.Name)
@@ -134,7 +136,7 @@ func FormatHostDisplay(host SSHHost) string {
 		details = append(details, fmt.Sprintf("host: %s", host.HostName))
 	}
 
-	if host.Port != "" && host.Port != DefaultSSHPort {
+	if host.Port != "" && host.Port != types.DefaultSSHPort {
 		details = append(details, fmt.Sprintf("port: %s", host.Port))
 	}
 

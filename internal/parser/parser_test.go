@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"ssh-tui/internal/types"
 	"strings"
 	"testing"
 )
@@ -80,7 +81,7 @@ func TestParseUserHost(t *testing.T) {
 }
 
 func TestFilterHosts_OrderAndMatching(t *testing.T) {
-	hosts := []SSHHost{
+	hosts := []types.SSHHost{
 		{Name: "alpha", HostName: "alpha.com", Aliases: []string{"a1"}},
 		{Name: "beta", HostName: "beta.com", Aliases: []string{"b1", "search"}},
 		{Name: "searchhost", HostName: "searchhost.com", Aliases: nil},
@@ -105,7 +106,7 @@ func TestFilterHosts_OrderAndMatching(t *testing.T) {
 }
 
 func TestFormatHostDisplay_ContainsDetails(t *testing.T) {
-	h := SSHHost{
+	h := types.SSHHost{
 		Name:     "myserver",
 		HostName: "example.com",
 		User:     "me",

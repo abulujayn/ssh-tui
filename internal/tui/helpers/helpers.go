@@ -2,19 +2,20 @@ package helpers
 
 import (
 	"ssh-tui/internal/parser"
+	"ssh-tui/internal/types"
 
 	"github.com/charmbracelet/lipgloss"
 )
 
 // BuildCustomHost builds a parser.SSHHost from raw user input (e.g. user@host)
-func BuildCustomHost(raw string) parser.SSHHost {
+func BuildCustomHost(raw string) types.SSHHost {
 	user, host := parser.ParseUserHost(raw)
-	return parser.SSHHost{
+	return types.SSHHost{
 		Name:     raw,
 		HostName: host,
 		User:     user,
-		Port:     parser.DefaultSSHPort,
-		Source:   parser.SourceCustom,
+		Port:     types.DefaultSSHPort,
+		Source:   types.SourceCustom,
 		Aliases:  nil,
 	}
 }

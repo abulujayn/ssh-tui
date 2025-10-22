@@ -3,11 +3,11 @@ package hostselector
 import (
 	"fmt"
 	"ssh-tui/internal/parser"
+	"ssh-tui/internal/types"
 	"strings"
 
 	"ssh-tui/internal/tui/helpers"
-	"ssh-tui/internal/tui/labels"
-	"ssh-tui/internal/tui/styles"
+	"ssh-tui/internal/tui/ui"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -16,25 +16,25 @@ import (
 func (m *HostSelectorModel) View() string {
 	var b strings.Builder
 
-	b.WriteString(styles.TitleStyle.Render("Host selection") + "\n\n")
+	b.WriteString(ui.TitleStyle.Render("Host selection") + "\n\n")
 
 	renderedSearch := helpers.RenderInputWithCursor(m.searchInput, len(m.searchInput), 40)
-	b.WriteString(styles.SearchStyle.Render("Search: "+renderedSearch) + "\n\n")
+	b.WriteString(ui.SearchStyle.Render("Search: "+renderedSearch) + "\n\n")
 
 	// If no hosts in the filtered list, show helpful messages and return early
 	if len(m.filteredHosts) == 0 {
 		if m.searchInput != "" {
 			if parser.IsValidHost(m.searchInput) {
-				b.WriteString(styles.TitleStyle.Render("Press Enter to connect to custom host: " + m.searchInput))
+				b.WriteString(ui.TitleStyle.Render("Press Enter to connect to custom host: " + m.searchInput))
 			} else {
-				b.WriteString(styles.ErrorStyle.Render("No hosts found matching: " + m.searchInput))
+				b.WriteString(ui.ErrorStyle.Render("No hosts found matching: " + m.searchInput))
 			}
 		} else {
-			b.WriteString(styles.ErrorStyle.Render("No SSH hosts found.\nCheck that ~/.ssh/config or ~/.ssh/known_hosts exist and contain host entries."))
+			b.WriteString(ui.ErrorStyle.Render("No SSH hosts found.\nCheck that ~/.ssh/config or ~/.ssh/known_hosts exist and contain host entries."))
 		}
 
 		b.WriteString("\n\n")
-		b.WriteString(styles.InstructionStyle.Render(labels.InstructionNav))
+		b.WriteString(ui.InstructionStyle.Render(ui.InstructionNav))
 		return b.String()
 	}
 
@@ -55,15 +55,15 @@ func (m *HostSelectorModel) View() string {
 
 		if i == m.cursor {
 			var content strings.Builder
-			styledHostLine := m.formatHostLineWithAliasesSelectedEnhanced(host, styles.SelectedTextStyle)
+			styledHostLine := m.formatHostLineWithAliasesSelectedEnhanced(host, ui.SelectedTextStyle)
 			content.WriteString(styledHostLine)
 			for j := 1; j < len(lines); j++ {
-				content.WriteString("\n" + styles.DetailTextStyle.Render(lines[j]))
+				content.WriteString("\n" + ui.DetailTextStyle.Render(lines[j]))
 			}
-			b.WriteString(styles.SelectedContainerStyle.Render(content.String()) + "\n")
+			b.WriteString(ui.SelectedContainerStyle.Render(content.String()) + "\n")
 		} else {
-			styledHostLine := m.formatHostLineWithAliases(host, styles.NormalStyle, styles.DetailTextStyle)
-			b.WriteString(styles.NormalContainerStyle.Render(styledHostLine) + "\n")
+			styledHostLine := m.formatHostLineWithAliases(host, ui.NormalStyle, ui.DetailTextStyle)
+			b.WriteString(ui.NormalContainerStyle.Render(styledHostLine) + "\n")
 		}
 	}
 
@@ -73,17 +73,17 @@ func (m *HostSelectorModel) View() string {
 		if start > 0 || end < len(m.filteredHosts) {
 			scrollInfo += " (scroll with \u2191/\u2193)"
 		}
-		b.WriteString(styles.InstructionStyle.Render(scrollInfo))
+		b.WriteString(ui.InstructionStyle.Render(scrollInfo))
 	}
 
 	b.WriteString("\n\n")
-	b.WriteString(styles.InstructionStyle.Render(labels.InstructionNav))
+	b.WriteString(ui.InstructionStyle.Render(ui.InstructionNav))
 
 	return b.String()
 }
 
 // formatHostLineWithAliases formats the host name line with styled aliases
-func (m *HostSelectorModel) formatHostLineWithAliases(host parser.SSHHost, normalStyle, aliasStyle lipgloss.Style) string {
+func (m *HostSelectorModel) formatHostLineWithAliases(host types.SSHHost, normalStyle, aliasStyle lipgloss.Style) string {
 	hostName := normalStyle.Render(host.Name)
 
 	if len(host.Aliases) > 0 {
@@ -95,7 +95,7 @@ func (m *HostSelectorModel) formatHostLineWithAliases(host parser.SSHHost, norma
 }
 
 // formatHostLineWithAliasesSelectedEnhanced formats the host name line for enhanced selected state
-func (m *HostSelectorModel) formatHostLineWithAliasesSelectedEnhanced(host parser.SSHHost, selectedStyle lipgloss.Style) string {
+func (m *HostSelectorModel) formatHostLineWithAliasesSelectedEnhanced(host types.SSHHost, selectedStyle lipgloss.Style) string {
 	if len(host.Aliases) > 0 {
 		// For enhanced selected items, use accent color for aliases
 		aliasStyle := lipgloss.NewStyle().

@@ -2,25 +2,27 @@ package hostselector
 
 import (
 	"ssh-tui/internal/parser"
+	"ssh-tui/internal/types"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 // HostSelectorModel represents the host selection screen
 type HostSelectorModel struct {
-	hosts         []parser.SSHHost
-	filteredHosts []parser.SSHHost
+	hosts         []types.SSHHost
+	filteredHosts []types.SSHHost
 	cursor        int
 	searchInput   string
 	selected      bool
-	selectedHost  *parser.SSHHost
-	openOptions   bool
-	width         int
-	height        int
+	selectedHost  *types.SSHHost
+	// If true, user requested to open the options screen after selection.
+	openOptions bool
+	width       int
+	height      int
 }
 
 // NewHostSelectorModel creates a new host selector model
-func NewHostSelectorModel(hosts []parser.SSHHost) *HostSelectorModel {
+func NewHostSelectorModel(hosts []types.SSHHost) *HostSelectorModel {
 	return &HostSelectorModel{
 		hosts:         hosts,
 		filteredHosts: hosts,
@@ -43,7 +45,7 @@ func (m *HostSelectorModel) updateFilter() {
 }
 
 // GetSelectedHost returns the selected host
-func (m *HostSelectorModel) GetSelectedHost() *parser.SSHHost {
+func (m *HostSelectorModel) GetSelectedHost() *types.SSHHost {
 	if m.selected {
 		return m.selectedHost
 	}

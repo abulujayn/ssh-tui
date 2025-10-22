@@ -5,25 +5,24 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"ssh-tui/internal/parser"
 	"ssh-tui/internal/tui/helpers"
-	"ssh-tui/internal/tui/labels"
-	"ssh-tui/internal/tui/styles"
+	"ssh-tui/internal/tui/ui"
+	"ssh-tui/internal/types"
 )
 
 // View implements the tea.Model interface for options entry
 func (m *OptionsEntryModel) View() string {
 	var b strings.Builder
 
-	b.WriteString(styles.TitleStyle.Render("SSH Options & Arguments") + "\n\n")
+	b.WriteString(ui.TitleStyle.Render("SSH Options & Arguments") + "\n\n")
 
 	// Selected host info in table format
 	b.WriteString(m.renderHostInfoTable())
-	if m.host.Source == parser.SourceConfig {
+	if m.host.Source == types.SourceConfig {
 		b.WriteString("\n\n")
 	}
 
-	b.WriteString(styles.TitleStyle.Render("Options:") + "\n")
+	b.WriteString(ui.TitleStyle.Render("Options:") + "\n")
 
 	inputStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
@@ -37,15 +36,15 @@ func (m *OptionsEntryModel) View() string {
 
 	b.WriteString("\n")
 
-	b.WriteString(styles.InstructionStyle.Render(labels.ExamplesText) + "\n\n")
+	b.WriteString(ui.InstructionStyle.Render(ui.ExamplesText) + "\n\n")
 
-	b.WriteString(styles.TitleStyle.Render("Command Preview:") + "\n")
+	b.WriteString(ui.TitleStyle.Render("Command Preview:") + "\n")
 
 	// Show the current command that would be executed
 	currentCommand := m.GetCommand()
 	b.WriteString(currentCommand + "\n\n")
 
-	b.WriteString(styles.InstructionStyle.Render("Use Enter to execute, Esc to go back") + "\n\n")
+	b.WriteString(ui.InstructionStyle.Render("Use Enter to execute, Esc to go back") + "\n\n")
 
 	return b.String()
 }
@@ -53,7 +52,7 @@ func (m *OptionsEntryModel) View() string {
 // renderHostInfoTable renders the selected host information in a table format
 func (m *OptionsEntryModel) renderHostInfoTable() string {
 	// Only show table for hosts from sshconfig
-	if m.host.Source != parser.SourceConfig {
+	if m.host.Source != types.SourceConfig {
 		return ""
 	}
 
@@ -86,7 +85,7 @@ func (m *OptionsEntryModel) renderHostInfoTable() string {
 	// Port
 	port := m.host.Port
 	if port == "" {
-		port = parser.DefaultSSHPort // Default SSH port
+		port = types.DefaultSSHPort // Default SSH port
 	}
 	m.addTableRow(&tableContent, labelStyle, valueStyle, "Port:", port)
 

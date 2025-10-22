@@ -1,22 +1,21 @@
-package tui
+package helpers
 
 import (
-	"ssh-tui/internal/parser"
-	"ssh-tui/internal/tui/helpers"
+	"ssh-tui/internal/types"
 	"testing"
 )
 
 func TestBuildCustomHost(t *testing.T) {
 	cases := []struct {
 		in   string
-		want parser.SSHHost
+		want types.SSHHost
 	}{
-		{"user@example.com", parser.SSHHost{Name: "user@example.com", HostName: "example.com", User: "user", Port: parser.DefaultSSHPort, Source: parser.SourceCustom}},
-		{"example.org", parser.SSHHost{Name: "example.org", HostName: "example.org", User: "", Port: parser.DefaultSSHPort, Source: parser.SourceCustom}},
+		{"user@example.com", types.SSHHost{Name: "user@example.com", HostName: "example.com", User: "user", Port: types.DefaultSSHPort, Source: types.SourceCustom}},
+		{"example.org", types.SSHHost{Name: "example.org", HostName: "example.org", User: "", Port: types.DefaultSSHPort, Source: types.SourceCustom}},
 	}
 
 	for _, c := range cases {
-		got := helpers.BuildCustomHost(c.in)
+		got := BuildCustomHost(c.in)
 		// compare relevant fields
 		if got.Name != c.want.Name || got.HostName != c.want.HostName || got.User != c.want.User || got.Port != c.want.Port || got.Source != c.want.Source {
 			t.Fatalf("BuildCustomHost(%q) = %+v, want %+v", c.in, got, c.want)
@@ -38,7 +37,7 @@ func TestScrollRange(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		s, e := helpers.ScrollRange(c.listLen, c.cursor, c.maxVisible)
+		s, e := ScrollRange(c.listLen, c.cursor, c.maxVisible)
 		if s != c.wantStart || e != c.wantEnd {
 			t.Fatalf("ScrollRange(%d,%d,%d) = %d,%d want %d,%d", c.listLen, c.cursor, c.maxVisible, s, e, c.wantStart, c.wantEnd)
 		}
@@ -60,7 +59,7 @@ func TestDeleteWordBackwards(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		gotS, gotCursor := helpers.DeleteWordBackwards(c.s, c.cursor)
+		gotS, gotCursor := DeleteWordBackwards(c.s, c.cursor)
 		if gotS != c.wantS || gotCursor != c.wantCursor {
 			t.Fatalf("DeleteWordBackwards(%q,%d) = %q,%d want %q,%d", c.s, c.cursor, gotS, gotCursor, c.wantS, c.wantCursor)
 		}

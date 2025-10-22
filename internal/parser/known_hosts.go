@@ -6,11 +6,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"ssh-tui/internal/types"
 )
 
 // ParseKnownHosts parses the SSH known_hosts file and returns a list of hosts
-func ParseKnownHosts() ([]SSHHost, error) {
-	var hosts []SSHHost
+func ParseKnownHosts() ([]types.SSHHost, error) {
+	var hosts []types.SSHHost
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -82,11 +84,11 @@ func ParseKnownHosts() ([]SSHHost, error) {
 
 			hostMap[host] = true
 
-			sshHost := SSHHost{
+			sshHost := types.SSHHost{
 				Name:     host,
 				HostName: host,
 				Port:     port,
-				Source:   SourceKnownHosts,
+				Source:   types.SourceKnownHosts,
 			}
 
 			hosts = append(hosts, sshHost)

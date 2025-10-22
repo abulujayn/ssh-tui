@@ -1,8 +1,8 @@
 package optionsentry
 
 import (
-	"ssh-tui/internal/parser"
 	"ssh-tui/internal/ssh"
+	"ssh-tui/internal/types"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -10,7 +10,7 @@ import (
 
 // OptionsEntryModel represents the SSH options entry screen
 type OptionsEntryModel struct {
-	host      *parser.SSHHost
+	host      *types.SSHHost
 	options   string
 	cursor    int
 	confirmed bool
@@ -20,7 +20,7 @@ type OptionsEntryModel struct {
 }
 
 // NewOptionsEntryModel creates a new options entry model
-func NewOptionsEntryModel(host *parser.SSHHost) *OptionsEntryModel {
+func NewOptionsEntryModel(host *types.SSHHost) *OptionsEntryModel {
 	return &OptionsEntryModel{
 		host:      host,
 		options:   "",

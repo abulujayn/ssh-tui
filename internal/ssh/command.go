@@ -1,18 +1,18 @@
 package ssh
 
 import (
-	"ssh-tui/internal/parser"
+	"ssh-tui/internal/types"
 	"strings"
 )
 
 // BuildSSHCommand constructs the SSH command string for callers
-func BuildSSHCommand(host *parser.SSHHost, options string) string {
+func BuildSSHCommand(host *types.SSHHost, options string) string {
 	var parts []string
 
 	parts = append(parts, "ssh")
 
 	// If the host is from SSH config, just use the host name directly
-	if host.Source == parser.SourceConfig {
+	if host.Source == types.SourceConfig {
 		parts = append(parts, host.Name)
 		if options != "" {
 			parts = append(parts, options)
@@ -21,7 +21,7 @@ func BuildSSHCommand(host *parser.SSHHost, options string) string {
 	}
 
 	// For hosts from known_hosts or other sources, expand the configuration
-	if host.Port != "" && host.Port != parser.DefaultSSHPort {
+	if host.Port != "" && host.Port != types.DefaultSSHPort {
 		parts = append(parts, "-p", host.Port)
 	}
 
